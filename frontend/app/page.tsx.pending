@@ -1,0 +1,157 @@
+"use client";
+
+import { useState } from "react";
+import BrandForm from "@/components/BrandForm";
+import PromptEditor from "@/components/PromptEditor";
+import Dashboard from "@/components/Dashboard";
+import type { Competitor, AnalyzeResponse } from "@/types";
+
+type Step = "form" | "prompts" | "results";
+
+export default function Home() {
+  const [step, setStep] = useState<Step>("form");
+  const [brand, setBrand] = useState("");
+  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [prompts, setPrompts] = useState<string[]>([]);
+  const [result, setResult] = useState<AnalyzeResponse | null>(null);
+  const [generatingPrompts, setGeneratingPrompts] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleGenerate(b: string, website: string, comps: Competitor[]) {
+    setGeneratingPrompts(true);
+    setError(null);
+    setBrand(b);
+    setCompetitors(comps);
+    try {
+      const res = await fetch("http://localhost:8000/generate-prompts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand: b, website }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || `Error: ${res.status}`);
+      }
+      const data = await res.json();
+      setPrompts(data.prompts);
+      setStep("prompts");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setGeneratingPrompts(false);
+    }
+  }
+
+  async function handleAnalyze(approvedPrompts: string[]) {
+    setAnalyzing(true);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand, competitors, prompts: approvedPrompts }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || `Error: ${res.status}`);
+      }
+      const data: AnalyzeResponse = await res.json();
+      setResult(data);
+      setStep("results");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
+  function reset() {
+    setStep("form");
+    setResult(null);
+    setPrompts([]);
+    setError(null);
+  }
+
+  return (
+    <main className="min-h-screen bg-[#0a0a0a] text-white">
+      {/* Header */}
+      <header className="border-b border-white/10 px-6 py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="text-sm font-medium text-white/70">AI Visibility Platform</span>
+          </div>
+          {step !== "form" && (
+            <button onClick={reset} className="text-xs text-white/30 hover:text-white/60 transition-colors">
+              ← Yeniden Başla
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Steps indicator */}
+      <div className="border-b border-white/5 px-6 py-3">
+        <div className="mx-auto flex max-w-5xl items-center gap-2 text-xs">
+          {(["form", "prompts", "results"] as Step[]).map((s, i) => {
+            const labels = ["1. Marka Gir", "2. Promtları Onayla", "3. Sonuçlar"];
+            const active = step === s;
+            const done = (step === "prompts" && i === 0) || (step === "results" && i < 2);
+            return (
+              <span key={s} className="flex items-center gap-2">
+                <span className={`font-medium ${active ? "text-emerald-400" : done ? "text-white/40" : "text-white/20"}`}>
+                  {done ? "✓" : ""} {labels[i]}
+                </span>
+                {i < 2 && <span className="text-white/10">→</span>}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Hero — only on form step */}
+      {step === "form" && (
+        <section className="px-6 py-14 text-center">
+          <div className="mx-auto max-w-2xl">
+            <span className="mb-4 inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium uppercase tracking-widest text-white/40">
+              Brand Intelligence
+            </span>
+            <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+              Markanız AI&apos;da<br />
+              <span className="text-emerald-400">ne kadar görünür?</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/40">
+              Markanı gir, sektörüne özel promtları Claude otomatik oluştursun.
+              Sen onayladıktan sonra analiz başlar.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* Content */}
+      <section className="px-6 pb-20">
+        <div className="mx-auto max-w-2xl">
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
+
+          {step === "form" && (
+            <BrandForm onGenerate={handleGenerate} loading={generatingPrompts} />
+          )}
+
+          {step === "prompts" && (
+            <PromptEditor prompts={prompts} onConfirm={handleAnalyze} analyzing={analyzing} />
+          )}
+        </div>
+
+        {step === "results" && result && (
+          <div className="mx-auto max-w-5xl">
+            <Dashboard data={result} />
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
