@@ -9,8 +9,37 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "VisibilityRadar — AI Brand Intelligence",
-  description: "Measure how visible your brand is across Claude, GPT-4o, Gemini and more. Free AI visibility score.",
+  title: {
+    default: "VisibilityRadar — AI Brand Visibility & GEO Intelligence",
+    template: "%s | VisibilityRadar",
+  },
+  description: "Measure how visible your brand is across Claude, GPT-4o, Gemini, Perplexity, Grok and DeepSeek. Get your free AI visibility score and beat competitors in AI search.",
+  keywords: ["AI visibility", "GEO optimization", "LLM SEO", "brand mentions AI", "AI search optimization", "generative engine optimization", "share of voice AI", "Claude brand visibility", "ChatGPT brand mentions"],
+  authors: [{ name: "VisibilityRadar" }],
+  creator: "VisibilityRadar",
+  publisher: "VisibilityRadar",
+  metadataBase: new URL("https://visibilityradar.ai"),
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://visibilityradar.ai",
+    siteName: "VisibilityRadar",
+    title: "VisibilityRadar — AI Brand Visibility & GEO Intelligence",
+    description: "Measure how visible your brand is across Claude, GPT-4o, Gemini, Perplexity, Grok and DeepSeek. Free AI visibility score.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VisibilityRadar — AI Brand Visibility" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VisibilityRadar — AI Brand Visibility & GEO Intelligence",
+    description: "Measure how visible your brand is across Claude, GPT-4o, Gemini and more. Free AI visibility score.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 },
+  },
 };
 
 export const viewport: Viewport = {
