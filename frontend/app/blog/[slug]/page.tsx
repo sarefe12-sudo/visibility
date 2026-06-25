@@ -17,7 +17,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${post.title} | VisibilityRadar Blog`,
     description: post.description,
-    openGraph: { title: post.title, description: post.description, type: "article", publishedTime: post.date },
+    alternates: { canonical: `/blog/${slug}` },
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      type: "article",
+      publishedTime: post.date,
+      url: `https://visibilityradar.ai/blog/${slug}`,
+      images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    },
   };
 }
 

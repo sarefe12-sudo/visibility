@@ -48,11 +48,29 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "VisibilityRadar",
+  "url": "https://visibilityradar.ai",
+  "description": "AI brand visibility intelligence platform. Measure how your brand appears across Claude, GPT-4o, Gemini, Perplexity, Grok and DeepSeek.",
+  "applicationCategory": "BusinessApplication",
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": "USD",
+    "lowPrice": "0",
+    "highPrice": "599",
+    "offerCount": "3",
+  },
+  "publisher": { "@type": "Organization", "name": "VisibilityRadar", "url": "https://visibilityradar.ai" },
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
       <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
         <head>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
           <Script
             src="https://www.googletagmanager.com/gtag/js?id=G-42NTZKDT76"
             strategy="afterInteractive"

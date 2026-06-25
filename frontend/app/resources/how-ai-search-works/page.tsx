@@ -3,8 +3,10 @@ import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "How AI Search Works | VisibilityRadar",
+  title: "How AI Search Works — Why Brands Get Recommended",
   description: "Learn how AI models like ChatGPT, Claude, and Gemini decide which brands to recommend — and what you can do to appear in their answers.",
+  alternates: { canonical: "/resources/how-ai-search-works" },
+  openGraph: { title: "How AI Search Works", description: "Learn how AI models decide which brands to recommend and how to appear in their answers.", url: "https://visibilityradar.ai/resources/how-ai-search-works", type: "article" },
 };
 
 export default function HowAiSearchWorks() {

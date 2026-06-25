@@ -4,8 +4,10 @@ import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Blog — AI Brand Visibility | VisibilityRadar",
+  title: "Blog — AI Brand Visibility & GEO Optimization",
   description: "Learn how to improve your brand's visibility in AI-generated answers from ChatGPT, Claude, Gemini, and Perplexity. Practical guides, strategy, and metrics.",
+  alternates: { canonical: "/blog" },
+  openGraph: { title: "VisibilityRadar Blog — AI Brand Visibility", description: "Practical guides on GEO optimization, LLM SEO, and AI brand visibility.", url: "https://visibilityradar.ai/blog", type: "website" },
 };
 
 const CATEGORY_COLOR: Record<string, string> = {

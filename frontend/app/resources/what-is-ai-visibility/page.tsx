@@ -3,8 +3,10 @@ import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "What is AI Visibility? | VisibilityRadar",
+  title: "What is AI Visibility? The Complete Guide",
   description: "AI Visibility measures how often your brand appears in AI-generated answers from ChatGPT, Claude, Gemini, and Perplexity. Learn why it matters and how to improve it.",
+  alternates: { canonical: "/resources/what-is-ai-visibility" },
+  openGraph: { title: "What is AI Visibility?", description: "AI Visibility measures how often your brand appears in AI-generated answers. Learn why it matters.", url: "https://visibilityradar.ai/resources/what-is-ai-visibility", type: "article" },
 };
 
 export default function WhatIsAiVisibility() {

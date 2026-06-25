@@ -3,8 +3,10 @@ import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "LLM Brand Optimization Guide | VisibilityRadar",
+  title: "LLM Brand Optimization (LLMO) — Complete Guide",
   description: "A complete guide to LLM Brand Optimization (LLMO) — the strategies that get your brand recommended by AI models like ChatGPT, Claude, and Gemini.",
+  alternates: { canonical: "/resources/llm-brand-optimization" },
+  openGraph: { title: "LLM Brand Optimization (LLMO) Guide", description: "The complete LLMO playbook — strategies to get your brand recommended by AI models.", url: "https://visibilityradar.ai/resources/llm-brand-optimization", type: "article" },
 };
 
 export default function LlmBrandOptimization() {

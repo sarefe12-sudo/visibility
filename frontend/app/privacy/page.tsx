@@ -2,8 +2,10 @@ import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | VisibilityRadar",
+  title: "Privacy Policy",
   description: "VisibilityRadar Privacy Policy — how we collect, use, and protect your data.",
+  alternates: { canonical: "/privacy" },
+  robots: { index: false, follow: false },
 };
 
 export default function PrivacyPage() {
