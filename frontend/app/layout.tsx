@@ -72,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <head>
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
           <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-42NTZKDT76"
+            src="https://www.googletagmanager.com/gtag/js?id=G-QTY92863Z3"
             strategy="afterInteractive"
           />
           <Script id="google-analytics" strategy="afterInteractive">
@@ -80,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-42NTZKDT76');
+              gtag('config', 'G-QTY92863Z3');
             `}
           </Script>
         </head>
