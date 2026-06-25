@@ -105,7 +105,7 @@ export async function GET(req: Request) {
     </a>
   </td></tr>
   <tr><td style="padding:20px 40px;border-top:1px solid #f1f5f9;text-align:center;">
-    <p style="margin:0;font-size:11px;color:#cbd5e1;">VisibilityRadar · visibilityradar.com</p>
+    <p style="margin:0;font-size:11px;color:#cbd5e1;">VisibilityRadar · visibilityradar.ai</p>
   </td></tr>
 </table></td></tr></table>
 </body></html>`
@@ -114,7 +114,7 @@ export async function GET(req: Request) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'VisibilityRadar <onboarding@resend.dev>',
+        from: 'VisibilityRadar <reports@visibilityradar.ai>',
         to: [user.email],
         subject: `Your AI Visibility Report — ${monthName}`,
         html,

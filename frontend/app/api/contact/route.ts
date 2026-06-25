@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
   // Notify admin
   await resend.emails.send({
-    from: 'onboarding@resend.dev',
+    from: 'VisibilityRadar <noreply@visibilityradar.ai>',
     to: 'sarefe12@gmail.com',
     subject: `New contact form submission from ${name || email}`,
     html: `
