@@ -100,7 +100,7 @@ export default function RecommendationsPanel({ data, market = "global", historyM
   async function generate() {
     setLoading(true); setError(null);
     try {
-      const res = await fetch("http://localhost:8001/recommendations", {
+      const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/recommendations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

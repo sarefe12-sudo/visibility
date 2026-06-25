@@ -42,7 +42,7 @@ export default function PromptEditor({ prompts: initial, onConfirm, analyzing, b
     setSuggestions([]);
     try {
       const existing = prompts.map(p => p.prompt);
-      const res = await fetch("http://localhost:8001/generate-prompts", {
+      const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/generate-prompts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand, market: market || "global", existing_prompts: existing }),

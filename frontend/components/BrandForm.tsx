@@ -89,7 +89,7 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
     suggestTimer.current = setTimeout(async () => {
       setLoadingSuggestions(true);
       try {
-        const res = await fetch("http://localhost:8001/suggest-competitors", {
+        const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/suggest-competitors", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ brand: val.trim(), market }),

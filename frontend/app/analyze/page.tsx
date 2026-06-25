@@ -87,7 +87,7 @@ export default function AnalyzePage() {
     setPreviousScore(prev ? prev.overall_score : undefined);
 
     try {
-      const res = await fetch("http://localhost:8001/generate-prompts", {
+      const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/generate-prompts", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand: b, website, market: selectedMarket }),
       });
@@ -113,7 +113,7 @@ export default function AnalyzePage() {
         return;
       }
 
-      const res = await fetch("http://localhost:8001/analyze", {
+      const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/analyze", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand, competitors, prompts: approvedPrompts, tier }),
       });
