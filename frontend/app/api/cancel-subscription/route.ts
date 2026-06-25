@@ -63,12 +63,12 @@ export async function POST(req: Request) {
   await supabase.from('users').update({ tier: 'free' }).eq('id', user.id)
 
   // Audit log
-  supabase.from('audit_logs').insert({
+  void supabase.from('audit_logs').insert({
     admin_email: email,
     action: 'self_cancel',
     target_user_email: user.email ?? email,
     details: `Reason: ${reason}${customNote ? ` — ${customNote}` : ''}`,
-  }).then(() => {}).catch(() => {})
+  })
 
   return NextResponse.json({ ok: true })
 }

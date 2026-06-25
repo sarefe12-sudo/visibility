@@ -60,12 +60,12 @@ export async function PATCH(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // audit log — fire and forget, ignore errors if table doesn't exist yet
-  supabase.from('audit_logs').insert({
+  void supabase.from('audit_logs').insert({
     actor_email: ADMIN_EMAIL,
     action: `admin_update_user`,
     target_id: userId,
     details: safe,
-  }).then(() => {}).catch(() => {})
+  })
 
   return NextResponse.json({ user: data })
 }
