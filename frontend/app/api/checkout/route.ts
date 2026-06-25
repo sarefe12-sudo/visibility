@@ -19,6 +19,26 @@ export async function POST(req: Request) {
 
   const storeId = process.env.LEMONSQUEEZY_STORE_ID!
   const apiKey = process.env.LEMONSQUEEZY_API_KEY!
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://visibilityradar.ai'
+
+  const body = JSON.stringify({
+    data: {
+      type: 'checkouts',
+      attributes: {
+        product_options: {
+          redirect_url: `${appUrl}/dashboard?upgraded=true`,
+        },
+        checkout_data: {
+          email: user.email,
+          custom: { clerk_id: userId },
+        },
+      },
+      relationships: {
+        store:   { data: { type: 'stores',   id: String(storeId) } },
+        variant: { data: { type: 'variants', id: String(variantId) } },
+      },
+    },
+  })
 
   const res = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
     method: 'POST',
@@ -27,29 +47,12 @@ export async function POST(req: Request) {
       'Content-Type': 'application/vnd.api+json',
       'Accept': 'application/vnd.api+json',
     },
-    body: JSON.stringify({
-      data: {
-        type: 'checkouts',
-        attributes: {
-          checkout_data: {
-            email: user.email,
-            custom: { clerk_id: userId },
-          },
-          checkout_options: {
-            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true`,
-          },
-          expires_at: null,
-        },
-        relationships: {
-          store:   { data: { type: 'stores',   id: String(storeId) } },
-          variant: { data: { type: 'variants', id: String(variantId) } },
-        },
-      },
-    }),
+    body,
   })
 
   const data = await res.json()
   const url = data?.data?.attributes?.url
+
   if (!url) {
     console.error('[LemonSqueezy] checkout error:', JSON.stringify(data))
     return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 })

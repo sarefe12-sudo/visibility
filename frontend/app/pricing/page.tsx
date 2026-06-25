@@ -98,15 +98,31 @@ export default function PricingPage() {
   const router = useRouter();
 
   async function handleCta(plan: typeof PLANS[0]) {
-    if (!plan.variantId) { router.push("/"); return; }
-    if (!isSignedIn) { router.push("/?signup=true"); return; }
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ variantId: plan.variantId }),
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
+    // Free plan → go to sign-up (or analyze if already signed in)
+    if (!plan.variantId) {
+      router.push(isSignedIn ? "/analyze" : "/sign-up");
+      return;
+    }
+    // Paid plan → must be signed in first
+    if (!isSignedIn) {
+      router.push("/sign-up");
+      return;
+    }
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variantId: plan.variantId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Checkout failed. Please try again.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    }
   }
 
   return (

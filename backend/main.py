@@ -92,6 +92,7 @@ class AnalyzeRequest(BaseModel):
     competitors: list[Competitor] = []
     prompts: list[str]
     tier: Optional[str] = "free"  # "free" | "pro" | "agency"
+    user_id: Optional[str] = None  # Supabase user UUID for token tracking
 
 
 class AnalyzeResponse(BaseModel):
@@ -177,8 +178,8 @@ def detect_sentiment(text: str, brand: str) -> str:
     return "neutral"
 
 
-async def call_model(model_id: str, prompt: str) -> str:
-    """Call a single model via LiteLLM, return response text."""
+async def call_model(model_id: str, prompt: str) -> tuple[str, int, int]:
+    """Call a single model via LiteLLM, return (response_text, prompt_tokens, completion_tokens)."""
     try:
         response = await litellm.acompletion(
             model=model_id,
@@ -186,9 +187,52 @@ async def call_model(model_id: str, prompt: str) -> str:
             max_tokens=400,
             timeout=30,
         )
-        return response.choices[0].message.content or ""
+        text = response.choices[0].message.content or ""
+        usage = response.usage
+        return text, getattr(usage, "prompt_tokens", 0), getattr(usage, "completion_tokens", 0)
     except Exception as e:
-        return f"[error: {str(e)[:100]}]"
+        return f"[error: {str(e)[:100]}]", 0, 0
+
+
+# Cost per 1M tokens (input, output) USD
+MODEL_COSTS: dict[str, tuple[float, float]] = {
+    "anthropic/claude-opus-4-8": (5.0, 25.0),
+    "openai/gpt-4o":             (2.5, 10.0),
+    "gemini/gemini-1.5-pro":     (1.25, 5.0),
+    "perplexity/sonar-pro":      (3.0, 15.0),
+    "xai/grok-3":                (3.0, 15.0),
+    "deepseek/deepseek-chat":    (0.14, 0.28),
+}
+
+
+async def log_token_usage(user_id: str, model_label: str, model_id: str, prompt_tokens: int, completion_tokens: int):
+    """Fire-and-forget: log token usage to Supabase."""
+    svc_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    supabase_url = os.getenv("SUPABASE_URL")
+    if not svc_key or not supabase_url or not user_id:
+        return
+    inp_per_m, out_per_m = MODEL_COSTS.get(model_id, (5.0, 15.0))
+    cost_usd = (prompt_tokens / 1_000_000 * inp_per_m) + (completion_tokens / 1_000_000 * out_per_m)
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            await client.post(
+                f"{supabase_url}/rest/v1/token_usage",
+                headers={
+                    "apikey": svc_key,
+                    "Authorization": f"Bearer {svc_key}",
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal",
+                },
+                json={
+                    "user_id": user_id,
+                    "model": model_label,
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "cost_usd": round(cost_usd, 6),
+                },
+            )
+    except Exception:
+        pass  # never block the main response
 
 
 def score_from_results(
@@ -551,22 +595,34 @@ async def analyze(req: AnalyzeRequest):
     # results_per_model[model_label] = list of {mentions: {entity: count}}
     results_per_model: dict[str, list[dict]] = {m: [] for m in active_models}
 
+    # Accumulate token usage per model label
+    token_totals: dict[str, tuple[int, int]] = {m: (0, 0) for m in active_models}
+
     for prompt in req.prompts:
         # Fire all models concurrently for this prompt
         tasks = {
             label: call_model(model_id, prompt)
             for label, model_id in active_models.items()
         }
-        responses = await asyncio.gather(*tasks.values())
+        results = await asyncio.gather(*tasks.values())
         model_responses: dict[str, ModelResponse] = {}
 
-        for label, response_text in zip(tasks.keys(), responses):
+        for label, (response_text, p_tok, c_tok) in zip(tasks.keys(), results):
             mentions = {e: count_mentions(response_text, e) for e in all_entities}
             sentiment = detect_sentiment(response_text, req.brand) if req.tier != "free" else "neutral"
             model_responses[label] = ModelResponse(response=response_text, mentions=mentions, sentiment=sentiment)
             results_per_model[label].append({"mentions": mentions})
+            prev_p, prev_c = token_totals[label]
+            token_totals[label] = (prev_p + p_tok, prev_c + c_tok)
 
         raw_results.append(MultiModelPromptResult(prompt=prompt, model_responses=model_responses))
+
+    # Log token usage per model (fire-and-forget)
+    if req.user_id:
+        for label, model_id in active_models.items():
+            p_tok, c_tok = token_totals[label]
+            if p_tok + c_tok > 0:
+                asyncio.create_task(log_token_usage(req.user_id, label, model_id, p_tok, c_tok))
 
     # Score brand per model
     brand_model_scores = score_from_results(

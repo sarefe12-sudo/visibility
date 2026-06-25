@@ -6,6 +6,73 @@ import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import type { AppUser, UserType } from "@/lib/supabase";
 
+const CANCEL_REASONS = [
+  "Too expensive",
+  "Not using it enough",
+  "Missing features I need",
+  "Switching to a competitor",
+  "Technical issues",
+  "Just testing / exploring",
+  "Other",
+];
+
+function CancelModal({ tier, onClose, onConfirm }: {
+  tier: string;
+  onClose: () => void;
+  onConfirm: (reason: string, note: string) => Promise<void>;
+}) {
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit() {
+    if (!reason) return;
+    setLoading(true);
+    await onConfirm(reason, note);
+    setLoading(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h2 className="text-lg font-bold text-slate-900 mb-1">Cancel your {tier} subscription</h2>
+        <p className="text-sm text-slate-500 mb-5">
+          We&apos;re sorry to see you go. Let us know why — it helps us improve.
+        </p>
+        <div className="space-y-2 mb-4">
+          {CANCEL_REASONS.map((r) => (
+            <button key={r} onClick={() => setReason(r)}
+              className={`w-full text-left rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                reason === r
+                  ? "border-indigo-500 bg-indigo-50 text-indigo-800 font-medium"
+                  : "border-slate-200 text-slate-700 hover:border-slate-300"
+              }`}>
+              {r}
+            </button>
+          ))}
+        </div>
+        {(reason === "Other" || reason === "Missing features I need") && (
+          <textarea value={note} onChange={(e) => setNote(e.target.value)}
+            placeholder={reason === "Missing features I need" ? "Which features?" : "Tell us more..."}
+            rows={2}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 mb-4 resize-none"
+          />
+        )}
+        <div className="flex gap-3 mt-2">
+          <button onClick={onClose}
+            className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all">
+            Keep my plan
+          </button>
+          <button onClick={handleSubmit} disabled={!reason || loading}
+            className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-all disabled:opacity-40">
+            {loading ? "Cancelling..." : "Confirm cancel"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const USER_TYPES: { value: UserType; label: string; desc: string; icon: string }[] = [
   { value: "individual", label: "Individual",  desc: "Freelancer or solo marketer tracking their own brand", icon: "👤" },
   { value: "corporate",  label: "Corporate",   desc: "In-house team managing a company brand",             icon: "🏢" },
@@ -20,6 +87,8 @@ export default function ProfilePage() {
   const [userType, setUserType] = useState<UserType>("individual");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
+  const [cancelDone, setCancelDone] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -48,8 +117,30 @@ export default function ProfilePage() {
 
   const tier = appUser?.tier ?? "free";
 
+  async function handleCancelConfirm(reason: string, note: string) {
+    const res = await fetch("/api/cancel-subscription", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason, customNote: note }),
+    });
+    if (res.ok) {
+      setShowCancel(false);
+      setCancelDone(true);
+      setAppUser((u) => u ? { ...u, tier: "free" } : u);
+    } else {
+      alert("Something went wrong. Please contact support.");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-50">
+      {showCancel && (
+        <CancelModal
+          tier={tier}
+          onClose={() => setShowCancel(false)}
+          onConfirm={handleCancelConfirm}
+        />
+      )}
       <AppHeader onLogoClick={() => router.push("/")} />
 
       <div className="mx-auto max-w-2xl px-4 sm:px-6 pt-24 pb-20">
@@ -75,6 +166,15 @@ export default function ProfilePage() {
                   className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-all">
                   Upgrade →
                 </button>
+              )}
+              {(tier === "pro" || tier === "agency") && !cancelDone && (
+                <button type="button" onClick={() => setShowCancel(true)}
+                  className="rounded-xl border border-red-200 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50 hover:border-red-300 transition-all">
+                  Cancel subscription
+                </button>
+              )}
+              {cancelDone && (
+                <span className="text-xs text-slate-400 italic">Cancelled — active until billing period ends</span>
               )}
             </div>
           </div>

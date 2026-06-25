@@ -22,6 +22,22 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  if (user?.is_held) {
+    return NextResponse.json({ error: 'account_held' }, { status: 403 })
+  }
+
+  // update last_login_at on every fetch (throttle: only if > 1 hour old)
+  if (user) {
+    try {
+      const oneHourAgo = new Date(Date.now() - 3600000).toISOString()
+      if (!user.last_login_at || user.last_login_at < oneHourAgo) {
+        await supabase.from('users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id)
+      }
+    } catch {
+      // column may not exist yet — silently ignore
+    }
+  }
+
   return NextResponse.json({ user: user ?? null })
 }
 

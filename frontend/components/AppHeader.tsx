@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function AppHeader({ onLogoClick, steps, currentStepIndex = 0, showStartOver, onStartOver }: Props) {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-3.5">
@@ -77,7 +77,7 @@ export default function AppHeader({ onLogoClick, steps, currentStepIndex = 0, sh
             <Link href="/contact" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
               Contact
             </Link>
-            {isSignedIn && (
+            {isLoaded && isSignedIn && (
               <>
                 <Link href="/analyze" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-all">
                   Analyze

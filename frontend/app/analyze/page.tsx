@@ -27,7 +27,7 @@ export default function AnalyzePage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [appUser, setAppUser] = useState<{ tier: string; analyses_count: number } | null>(null);
+  const [appUser, setAppUser] = useState<{ id: string; tier: string; analyses_count: number } | null>(null);
   const [monthlyCount, setMonthlyCount] = useState(0);
   const [pastAnalyses, setPastAnalyses] = useState<Analysis[]>([]);
   const [previousScore, setPreviousScore] = useState<number | undefined>(undefined);
@@ -115,7 +115,7 @@ export default function AnalyzePage() {
 
       const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/analyze", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand, competitors, prompts: approvedPrompts, tier }),
+        body: JSON.stringify({ brand, competitors, prompts: approvedPrompts, tier, user_id: appUser?.id ?? null }),
       });
       if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.detail || `Error: ${res.status}`); }
       const data: AnalyzeResponse = await res.json();
