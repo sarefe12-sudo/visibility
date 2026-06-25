@@ -41,7 +41,7 @@ export default function PrivacyPage() {
               },
               {
                 title: "6. Your Rights",
-                body: "You may request access to, correction of, or deletion of your personal data at any time by contacting us at privacy@visibilityradar.com. We will respond within 30 days. You may also delete your account directly from your profile settings."
+                body: "You may request access to, correction of, or deletion of your personal data at any time by contacting us at privacy@visibilityradar.ai. We will respond within 30 days. You may also delete your account directly from your profile settings."
               },
               {
                 title: "7. Data Retention",
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
               },
               {
                 title: "10. Contact",
-                body: "For privacy-related questions, contact us at privacy@visibilityradar.com or use the contact form at visibilityradar.com/contact."
+                body: "For privacy-related questions, contact us at privacy@visibilityradar.ai or use the contact form at visibilityradar.ai/contact."
               },
             ].map(section => (
               <section key={section.title}>

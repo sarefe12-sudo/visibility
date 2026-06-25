@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error('[contact] insert error:', error.message)
-    return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
+    // Continue even if DB insert fails — still send email notification
   }
 
   // Notify admin
