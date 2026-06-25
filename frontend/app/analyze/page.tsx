@@ -259,7 +259,7 @@ export default function AnalyzePage() {
             </div>
             <h2 className="text-xl font-extrabold text-slate-900 mb-2">Analyzing {brand}</h2>
             <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-              Querying prompts across {tier === "free" ? "2" : "all 6"} AI models.<br/>This usually takes 20–40 seconds.
+              Querying prompts across {tier === "free" ? "2" : "all 6"} AI models.<br/>This usually takes 1–5 minutes.
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               {(tier === "free"

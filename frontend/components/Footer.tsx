@@ -102,9 +102,16 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-slate-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-slate-400">© {new Date().getFullYear()} VisibilityRadar. All rights reserved.</p>
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-slate-400">Real-time AI analysis across 6 models</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Link href="/contact" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Contact</Link>
+              <Link href="/terms" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Terms</Link>
+              <Link href="/privacy" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Privacy</Link>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs text-slate-400">Real-time AI analysis across 6 models</span>
+            </div>
           </div>
         </div>
       </div>

@@ -149,7 +149,7 @@ function pageHeader(doc: Doc, W: number, subtitle: string) {
 function pageFooter(doc: Doc, W: number, H: number, pg: number, total?: number) {
   setDraw(doc, SLATE2); doc.line(M, H - 12, W - M, H - 12);
   setFont(doc, "normal", 7); setTxt(doc, SLATE5);
-  doc.text("visibilityradar.com", M, H - 5);
+  doc.text("visibilityradar.ai", M, H - 5);
   const pgLabel = total ? `${pg} / ${total}` : `${pg}`;
   doc.text(pgLabel, W / 2, H - 5, { align: "center" });
   doc.text(new Date().toLocaleDateString("en-GB", { year:"numeric", month:"short", day:"numeric" }), W - M, H - 5, { align: "right" });
