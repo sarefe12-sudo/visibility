@@ -62,7 +62,10 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
   const [compName, setCompName] = useState("");
   const [compSite, setCompSite] = useState("");
   const [showOther, setShowOther] = useState(false);
+  const [suggestedComps, setSuggestedComps] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -78,6 +81,33 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
   const selectedOther = !isPreset ? ALL_OTHERS.find((m) => m.value === market) : null;
 
   const compAtLimit = maxCompetitors !== undefined && competitors.length >= maxCompetitors;
+
+  function handleBrandChange(val: string) {
+    setBrand(val);
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    if (val.trim().length < 2) { setSuggestedComps([]); return; }
+    suggestTimer.current = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      try {
+        const res = await fetch("http://localhost:8001/suggest-competitors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brand: val.trim(), market }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestedComps((data.competitors as string[]).slice(0, 5));
+        }
+      } catch { /* silent */ }
+      finally { setLoadingSuggestions(false); }
+    }, 800);
+  }
+
+  function addSuggestedComp(name: string) {
+    if (compAtLimit || competitors.find((c) => c.name === name)) return;
+    setCompetitors([...competitors, { name }]);
+    setSuggestedComps((prev) => prev.filter((s) => s !== name));
+  }
 
   function addCompetitor() {
     const name = compName.trim();
@@ -111,7 +141,7 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
             Brand
             <span className="rounded px-1.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] normal-case tracking-normal font-bold border border-emerald-100">required</span>
           </label>
-          <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Nike" required className={inputCls} />
+          <input value={brand} onChange={(e) => handleBrandChange(e.target.value)} placeholder="Nike" required className={inputCls} />
         </div>
         <div>
           <label className="mb-2 block text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -191,10 +221,14 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
       {/* Competitors divider */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-slate-100" />
-        <span className="text-xs text-slate-400 font-medium">
+        <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
           Add Competitors
-          {maxCompetitors !== undefined && (
-            <span className="ml-1 text-slate-300">({competitors.length}/{maxCompetitors})</span>
+          {maxCompetitors !== undefined ? (
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${compAtLimit ? "border-red-200 bg-red-50 text-red-500" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+              {competitors.length}/{maxCompetitors}
+            </span>
+          ) : (
+            <span className="text-slate-300">({competitors.length})</span>
           )}
         </span>
         <div className="h-px flex-1 bg-slate-100" />
@@ -203,9 +237,53 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
       <div>
         {compAtLimit && (
           <p className="mb-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            Demo limit: 1 competitor max. <a href="/pricing" className="font-semibold underline">Upgrade to Pro</a> for up to 3.
+            {maxCompetitors === 1
+              ? <>Demo limit: 1 competitor max. <a href="/pricing" className="font-semibold underline">Upgrade to Pro</a> for up to 3.</>
+              : `Limit reached: max ${maxCompetitors} competitors on your plan.`
+            }
           </p>
         )}
+
+        {/* Suggested competitors */}
+        {(suggestedComps.length > 0 || loadingSuggestions) && (
+          <div className="mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
+              {loadingSuggestions ? (
+                <><svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Finding competitors…</>
+              ) : (
+                <><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>Suggested competitors — click to add</>
+              )}
+            </p>
+            {suggestedComps.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {suggestedComps.map((s) => {
+                  const alreadyAdded = !!competitors.find((c) => c.name === s);
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => addSuggestedComp(s)}
+                      disabled={alreadyAdded || compAtLimit}
+                      className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                        alreadyAdded
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-600 cursor-default"
+                          : "border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:border-indigo-300"
+                      }`}
+                    >
+                      {alreadyAdded ? (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      ) : (
+                        <span className="font-black">+</span>
+                      )}
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid gap-2 grid-cols-1 sm:grid-cols-[1fr_1fr_auto]">
           <input value={compName} onChange={(e) => setCompName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCompetitor())} placeholder="Adidas" disabled={compAtLimit} className={`${inputCls} disabled:bg-slate-50 disabled:text-slate-400`} />
           <input value={compSite} onChange={(e) => setCompSite(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCompetitor())} placeholder="adidas.com" disabled={compAtLimit} className={`${inputCls} disabled:bg-slate-50 disabled:text-slate-400`} />
@@ -238,7 +316,7 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Analyzing industry…
+            Generating prompts…
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2">
@@ -247,6 +325,11 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
           </span>
         )}
       </button>
+      {!brand.trim() && (
+        <p className="text-center text-xs text-slate-400 -mt-1">
+          ↑ Enter your brand name above to continue
+        </p>
+      )}
     </form>
   );
 }

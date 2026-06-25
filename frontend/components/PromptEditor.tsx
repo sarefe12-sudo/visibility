@@ -7,16 +7,19 @@ interface Props {
   prompts: PromptWithTrend[];
   onConfirm: (prompts: string[]) => void;
   analyzing: boolean;
+  brand?: string;
+  market?: string;
+  promptLimit?: number;
 }
 
-const FREE_LIMIT = 10;
-
-export default function PromptEditor({ prompts: initial, onConfirm, analyzing }: Props) {
+export default function PromptEditor({ prompts: initial, onConfirm, analyzing, brand, market, promptLimit = 10 }: Props) {
   const [prompts, setPrompts] = useState<PromptWithTrend[]>(initial);
   const [newPrompt, setNewPrompt] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
-  const atLimit = prompts.length >= FREE_LIMIT;
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const atLimit = prompts.length >= promptLimit;
 
   function remove(i: number) { setPrompts(prompts.filter((_, idx) => idx !== i)); }
   function addPrompt() {
@@ -33,6 +36,41 @@ export default function PromptEditor({ prompts: initial, onConfirm, analyzing }:
     setEditIndex(null);
   }
 
+  async function suggestMore() {
+    if (!brand || suggesting) return;
+    setSuggesting(true);
+    setSuggestions([]);
+    try {
+      const existing = prompts.map(p => p.prompt);
+      const res = await fetch("http://localhost:8001/generate-prompts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand, market: market || "global", existing_prompts: existing }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      // Filter out duplicates
+      const newOnes = (data.prompts as PromptWithTrend[])
+        .map(p => p.prompt)
+        .filter(p => !prompts.find(ep => ep.prompt === p));
+      setSuggestions(newOnes);
+    } catch {
+      // silently fail
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  function addSuggestion(p: string) {
+    if (atLimit) return;
+    setPrompts(prev => [...prev, { prompt: p, trend_score: 0 }]);
+    setSuggestions(prev => prev.filter(s => s !== p));
+  }
+
+  function dismissSuggestion(p: string) {
+    setSuggestions(prev => prev.filter(s => s !== p));
+  }
+
   return (
     <div className="space-y-4">
       <div className="card p-5">
@@ -42,7 +80,7 @@ export default function PromptEditor({ prompts: initial, onConfirm, analyzing }:
             <p className="text-xs text-slate-400 mt-1">These {prompts.length} queries will be sent to all active AI models</p>
           </div>
           <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${atLimit ? "border-amber-200 bg-amber-50 text-amber-600" : "border-emerald-200 bg-emerald-50 text-emerald-600"}`}>
-            {prompts.length} / {FREE_LIMIT} prompts
+            {prompts.length} / {promptLimit} prompts
           </span>
         </div>
       </div>
@@ -75,9 +113,68 @@ export default function PromptEditor({ prompts: initial, onConfirm, analyzing }:
       {atLimit && (
         <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <p className="text-xs text-amber-700">Free plan: 10 prompt limit reached. <a href="/pricing" className="font-semibold underline">Upgrade to Pro</a> for 25 prompts.</p>
+          <p className="text-xs text-amber-700">Prompt limit reached ({promptLimit}). {promptLimit < 25 && <><a href="/pricing" className="font-semibold underline">Upgrade to Pro</a> for 25 prompts.</>}</p>
         </div>
       )}
+
+      {/* Suggest More button */}
+      {brand && !atLimit && (
+        <button
+          type="button"
+          onClick={suggestMore}
+          disabled={suggesting}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 hover:border-indigo-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {suggesting ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              Generating suggestions…
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Suggest More Prompts
+            </>
+          )}
+        </button>
+      )}
+
+      {/* Suggestions panel */}
+      {suggestions.length > 0 && (
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 space-y-2">
+          <p className="text-xs font-bold text-indigo-700 mb-3 flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            AI Suggestions — click + to add
+          </p>
+          {suggestions.map((s) => (
+            <div key={s} className="flex items-start gap-3 rounded-xl border border-indigo-100 bg-white px-4 py-3">
+              <p className="flex-1 text-sm text-slate-700 leading-relaxed">{s}</p>
+              <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
+                <button
+                  type="button"
+                  onClick={() => addSuggestion(s)}
+                  disabled={atLimit}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all disabled:opacity-40 text-sm font-bold"
+                  title="Add this prompt"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => dismissSuggestion(s)}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all text-sm"
+                  title="Dismiss"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <input value={newPrompt} onChange={(e) => setNewPrompt(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addPrompt())}
           placeholder={atLimit ? "Upgrade to add more prompts…" : "Add your own prompt…"}

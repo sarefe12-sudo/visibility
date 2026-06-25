@@ -1,0 +1,167 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import AppHeader from "@/components/AppHeader";
+
+export default function ContactPage() {
+  const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  function update(field: string, value: string) {
+    setForm(f => ({ ...f, [field]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("loading");
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, source: "contact_page" }),
+    });
+    setStatus(res.ok ? "success" : "error");
+  }
+
+  const inputCls = "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-300 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all";
+
+  return (
+    <main className="min-h-screen bg-white">
+      <AppHeader />
+
+      <section className="pt-24 pb-20 px-6">
+        <div className="mx-auto max-w-4xl">
+
+          {/* Header */}
+          <div className="text-center mb-14">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-4 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+              <span className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Get in Touch</span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-slate-900 mb-3">Contact Us</h1>
+            <p className="text-slate-500 max-w-md mx-auto">Questions about pricing, the product, or a custom plan for your agency? We reply within 24 hours.</p>
+          </div>
+
+          <div className="grid gap-10 sm:grid-cols-[1fr_400px]">
+
+            {/* Left — info cards */}
+            <div className="space-y-4">
+              {[
+                {
+                  bg: "bg-indigo-50", border: "border-indigo-100",
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                  iconBg: "bg-indigo-100",
+                  title: "General Questions",
+                  body: "Product features, how it works, or anything else. We're happy to help.",
+                },
+                {
+                  bg: "bg-violet-50", border: "border-violet-100",
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <rect x="2" y="7" width="20" height="14" rx="2" stroke="#7c3aed" strokeWidth="2"/>
+                      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M12 12v4M10 14h4" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  ),
+                  iconBg: "bg-violet-100",
+                  title: "Agency & Enterprise",
+                  body: "Custom plans, white-label setup, volume pricing, and dedicated support.",
+                },
+                {
+                  bg: "bg-emerald-50", border: "border-emerald-100",
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#059669" strokeWidth="2" strokeLinecap="round"/>
+                      <circle cx="9" cy="7" r="4" stroke="#059669" strokeWidth="2"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#059669" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  ),
+                  iconBg: "bg-emerald-100",
+                  title: "Partnerships",
+                  body: "Integration partners, resellers, and referral programs.",
+                },
+                {
+                  bg: "bg-rose-50", border: "border-rose-100",
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="#e11d48" strokeWidth="2"/>
+                      <path d="M12 8v4M12 16h.01" stroke="#e11d48" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  ),
+                  iconBg: "bg-rose-100",
+                  title: "Bug Reports",
+                  body: "Found something broken? Let us know and we'll fix it fast.",
+                },
+              ].map(c => (
+                <div key={c.title} className={`flex gap-4 rounded-2xl border ${c.border} ${c.bg} px-5 py-4`}>
+                  <div className={`flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${c.iconBg}`}>
+                    {c.icon}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 mb-0.5">{c.title}</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">{c.body}</p>
+                  </div>
+                </div>
+              ))}
+
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 mt-2">
+                <p className="text-xs font-semibold text-indigo-700 mb-1">Response time</p>
+                <p className="text-xs text-indigo-600">We typically reply within <strong>24 hours</strong> on business days.</p>
+              </div>
+            </div>
+
+            {/* Right — form */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm h-fit">
+              {status === "success" ? (
+                <div className="text-center py-10">
+                  <div className="text-4xl mb-3">✓</div>
+                  <p className="text-sm font-bold text-slate-800 mb-1">Message received!</p>
+                  <p className="text-xs text-slate-500 mb-5">We'll get back to you within 24 hours.</p>
+                  <button onClick={() => setStatus("idle")} className="text-xs text-indigo-600 hover:underline">Send another message</button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</label>
+                      <input value={form.name} onChange={e => update("name", e.target.value)} placeholder="Jane Smith" className={inputCls} />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</label>
+                      <input value={form.company} onChange={e => update("company", e.target.value)} placeholder="Acme Inc." className={inputCls} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Email <span className="text-red-400">*</span>
+                    </label>
+                    <input type="email" required value={form.email} onChange={e => update("email", e.target.value)} placeholder="jane@acme.com" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Message <span className="text-red-400">*</span>
+                    </label>
+                    <textarea required rows={5} value={form.message} onChange={e => update("message", e.target.value)} placeholder="Tell us what you need…" className={`${inputCls} resize-none`} />
+                  </div>
+
+                  {status === "error" && (
+                    <p className="text-xs text-red-500">Something went wrong. Please try again.</p>
+                  )}
+
+                  <button type="submit" disabled={status === "loading"} className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all disabled:opacity-40">
+                    {status === "loading" ? "Sending…" : "Send Message →"}
+                  </button>
+                  <p className="text-xs text-slate-400 text-center">By submitting, you agree to our <Link href="/privacy" className="underline hover:text-slate-600">Privacy Policy</Link>.</p>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

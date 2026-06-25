@@ -17,11 +17,12 @@ export async function GET() {
   if (!user) return NextResponse.json({ analyses: [], monthly_count: 0 })
 
   const limit = TIER_LIMITS[user.tier as keyof typeof TIER_LIMITS]
+  // history_days: 0 means "no history restriction" for free (they only have 1 analysis anyway)
+  // Use null to fetch all — the limit(50) cap keeps it safe
   const cutoff = limit.history_days > 0
     ? new Date(Date.now() - limit.history_days * 86400000).toISOString()
     : null
 
-  // Current month start
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
@@ -43,7 +44,7 @@ export async function GET() {
   return NextResponse.json({ analyses, monthly_count: monthly_count ?? 0 })
 }
 
-// POST /api/analyses — save new analysis (also enforces free limit)
+// POST /api/analyses — save new analysis (also enforces limits)
 export async function POST(req: Request) {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -53,12 +54,16 @@ export async function POST(req: Request) {
 
   const tierLimits = TIER_LIMITS[user.tier as keyof typeof TIER_LIMITS]
 
-  // Enforce limits — free uses total count, paid plans use monthly count
   if (user.tier === 'free') {
-    if (user.analyses_count >= tierLimits.analyses) {
+    // Free: lifetime cap — use DB count to avoid race conditions
+    const { count } = await supabase
+      .from('analyses').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    if ((count ?? 0) >= tierLimits.analyses) {
       return NextResponse.json({ error: 'free_limit_reached' }, { status: 403 })
     }
   } else {
+    // Pro/Agency: monthly cap
     const monthStart = new Date()
     monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
     const { count } = await supabase
@@ -80,8 +85,36 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Increment analyses_count
-  await supabase.from('users').update({ analyses_count: user.analyses_count + 1 }).eq('id', user.id)
+  // Atomic increment — avoids race condition from read-then-write
+  await supabase.rpc('increment_analyses_count', { user_id_input: user.id })
 
   return NextResponse.json({ analysis })
+}
+
+// HEAD /api/analyses — pre-flight limit check before calling backend
+// Returns 403 if user is at limit, 200 if they can proceed
+export async function HEAD() {
+  const { userId } = await auth()
+  if (!userId) return new NextResponse(null, { status: 401 })
+
+  const { data: user } = await supabase.from('users').select('id, tier').eq('clerk_id', userId).single()
+  if (!user) return new NextResponse(null, { status: 404 })
+
+  const tierLimits = TIER_LIMITS[user.tier as keyof typeof TIER_LIMITS]
+
+  if (user.tier === 'free') {
+    const { count } = await supabase
+      .from('analyses').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    if ((count ?? 0) >= tierLimits.analyses) return new NextResponse(null, { status: 403 })
+  } else {
+    const monthStart = new Date()
+    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+    const { count } = await supabase
+      .from('analyses').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id).gte('created_at', monthStart.toISOString())
+    if ((count ?? 0) >= tierLimits.analyses) return new NextResponse(null, { status: 403 })
+  }
+
+  return new NextResponse(null, { status: 200 })
 }

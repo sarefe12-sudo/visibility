@@ -55,7 +55,24 @@ export default function PromptsTable({ brand, results, activeModels }: Props) {
               </button>
               {isOpen && modelResp && (
                 <div className="space-y-3 px-4 pb-4 border-t border-slate-100">
-                  <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-500 pt-3">{modelResp.response}</p>
+                  <div className="flex items-center gap-2 pt-3">
+                    {modelResp.sentiment === "positive" && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Positive
+                      </span>
+                    )}
+                    {modelResp.sentiment === "negative" && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-400" /> Negative
+                      </span>
+                    )}
+                    {(!modelResp.sentiment || modelResp.sentiment === "neutral") && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-bold text-slate-500">
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-300" /> Neutral
+                      </span>
+                    )}
+                  </div>
+                  <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-500">{modelResp.response}</p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {Object.entries(modelResp.mentions).map(([name, count]) => (
                       <span key={name} className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-500">{name}: {count}×</span>

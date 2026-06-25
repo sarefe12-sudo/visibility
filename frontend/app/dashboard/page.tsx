@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<{ data: AnalyzeResponse; market: string } | null>(null);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<{ data: AnalyzeResponse; market: string; previousScore?: number } | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -68,7 +68,7 @@ export default function DashboardPage() {
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 5l-7 7 7 7"/></svg>
             Back to Dashboard
           </button>
-          <Dashboard data={selectedAnalysis.data} market={selectedAnalysis.market} fromHistory />
+          <Dashboard data={selectedAnalysis.data} market={selectedAnalysis.market} fromHistory tier={tier as "free" | "pro" | "agency"} previousScore={selectedAnalysis.previousScore} />
         </div>
       </main>
     );
@@ -89,7 +89,7 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-400 mt-0.5">Your AI visibility analysis history</p>
           </div>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/analyze")}
             className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-all self-start sm:self-auto"
           >
             + New Analysis
@@ -143,7 +143,7 @@ export default function DashboardPage() {
             <p className="text-sm font-semibold text-slate-700 mb-1">No analyses yet</p>
             <p className="text-xs text-slate-400 mb-5">Run your first AI visibility check</p>
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/analyze")}
               className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-all"
             >
               Start Analysis
@@ -155,46 +155,83 @@ export default function DashboardPage() {
               {analyses.length} {analyses.length === 1 ? "analysis" : "analyses"}
               {limits.history_days > 0 ? ` · last ${limits.history_days} days` : ""}
             </p>
-            {analyses.map((a) => (
-              <div
-                key={a.id}
-                onClick={() => a.result_snapshot && setSelectedAnalysis({ data: a.result_snapshot as unknown as AnalyzeResponse, market: a.market })}
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-4 flex items-center justify-between gap-4 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg font-extrabold text-slate-600">
-                    {a.brand[0].toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{a.brand}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-xs text-slate-400">{a.market.toUpperCase()}</span>
-                      <span className="text-slate-200">·</span>
-                      <span className="text-xs text-slate-400">{a.prompt_count} prompts</span>
-                      {a.competitor_count > 0 && (
-                        <>
-                          <span className="text-slate-200">·</span>
-                          <span className="text-xs text-slate-400">{a.competitor_count} competitors</span>
-                        </>
-                      )}
-                      <span className="text-slate-200">·</span>
-                      <div className="flex gap-1">
-                        {a.active_models.slice(0, 4).map((m) => (
-                          <span key={m} className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLORS[m] ?? "#94a3b8" }} />
-                        ))}
+            {analyses.map((a) => {
+              const brandKey = a.brand.toLowerCase().trim();
+              const aTime = new Date(a.created_at).getTime();
+
+              // Find the most recent earlier analysis of the same brand (compare by timestamp, not array index)
+              const prevForBrand = analyses
+                .filter(p => p.brand.toLowerCase().trim() === brandKey && new Date(p.created_at).getTime() < aTime)
+                .sort((x, y) => new Date(y.created_at).getTime() - new Date(x.created_at).getTime())[0];
+
+              // Absolute point difference — scores are 0-100 so this is already interpretable
+              const delta = prevForBrand
+                ? Math.round(a.overall_score - prevForBrand.overall_score)
+                : undefined;
+
+              const deltaLabel = prevForBrand
+                ? `vs ${new Date(prevForBrand.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`
+                : "";
+
+              return (
+                <div
+                  key={a.id}
+                  onClick={() => a.result_snapshot && setSelectedAnalysis({
+                    data: a.result_snapshot as unknown as AnalyzeResponse,
+                    market: a.market,
+                    previousScore: prevForBrand?.overall_score,
+                  })}
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4 flex items-center justify-between gap-4 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg font-extrabold text-slate-600">
+                      {a.brand[0].toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{a.brand}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-xs text-slate-400">{a.market.toUpperCase()}</span>
+                        <span className="text-slate-200">·</span>
+                        <span className="text-xs text-slate-400">{a.prompt_count} prompts</span>
+                        {a.competitor_count > 0 && (
+                          <>
+                            <span className="text-slate-200">·</span>
+                            <span className="text-xs text-slate-400">{a.competitor_count} competitors</span>
+                          </>
+                        )}
+                        <span className="text-slate-200">·</span>
+                        <div className="flex gap-1">
+                          {a.active_models.map((m) => (
+                            <span key={m} className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLORS[m] ?? "#94a3b8" }} />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <ScoreBadge score={a.overall_score} />
+                    {delta !== undefined && (
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          delta > 0
+                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                            : delta < 0
+                              ? "bg-rose-50 text-rose-600 border border-rose-100"
+                              : "bg-slate-50 text-slate-400 border border-slate-100"
+                        }`}>
+                          {delta > 0 ? "↑" : delta < 0 ? "↓" : "="}{delta > 0 ? `+${delta}` : delta === 0 ? "0" : delta}
+                        </span>
+                        <span className="text-[9px] text-slate-400 leading-none">{deltaLabel}</span>
+                      </div>
+                    )}
+                    <span className="text-xs text-slate-400">
+                      {new Date(a.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="text-slate-300"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <ScoreBadge score={a.overall_score} />
-                  <span className="text-xs text-slate-400">
-                    {new Date(a.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                  </span>
-                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="text-slate-300"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

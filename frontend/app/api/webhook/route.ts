@@ -38,21 +38,34 @@ export async function POST(req: Request) {
     const customerId = String(attrs.customer_id ?? '')
     const subscriptionId = String(event.data?.id ?? '')
 
-    if (clerkId) {
-      await supabase.from('users').update({
-        tier,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscriptionId,
-      }).eq('clerk_id', clerkId)
+    if (!clerkId) {
+      console.error('[webhook] subscription event missing clerk_id — cannot upgrade user', { eventName, subscriptionId })
+      return NextResponse.json({ error: 'missing clerk_id in custom_data' }, { status: 400 })
+    }
+
+    const { error: updateError } = await supabase.from('users').update({
+      tier,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionId,
+    }).eq('clerk_id', clerkId)
+
+    if (updateError) {
+      console.error('[webhook] failed to upgrade user', { clerkId, tier, updateError })
+      return NextResponse.json({ error: 'db update failed' }, { status: 500 })
     }
   }
 
   // Subscription cancelled / expired → downgrade to free
   if (eventName === 'subscription_cancelled' || eventName === 'subscription_expired') {
     const subscriptionId = String(event.data?.id ?? '')
-    await supabase.from('users')
+    const { error: downgradeError } = await supabase.from('users')
       .update({ tier: 'free', stripe_subscription_id: null })
       .eq('stripe_subscription_id', subscriptionId)
+
+    if (downgradeError) {
+      console.error('[webhook] failed to downgrade user', { subscriptionId, downgradeError })
+      return NextResponse.json({ error: 'db update failed' }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ ok: true })

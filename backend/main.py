@@ -38,7 +38,7 @@ def get_active_models() -> dict[str, str]:
         "gpt4o":      ("OPENAI_API_KEY",    "openai/gpt-4o"),
         "gemini":     ("GEMINI_API_KEY",    "gemini/gemini-1.5-pro"),
         "perplexity": ("PERPLEXITY_API_KEY","perplexity/sonar-pro"),
-        "grok":       ("XAI_API_KEY",       "xai/grok-2-latest"),
+        "grok":       ("XAI_API_KEY",       "xai/grok-3"),
         "deepseek":   ("DEEPSEEK_API_KEY",  "deepseek/deepseek-chat"),
     }
     active = {}
@@ -58,12 +58,19 @@ class Competitor(BaseModel):
 class GeneratePromptsRequest(BaseModel):
     brand: str
     website: Optional[str] = None
-    market: Optional[str] = "global"  # "global" | "TR" | "US" | "GB" | "DE"
+    market: Optional[str] = "global"
+    existing_prompts: Optional[list[str]] = None
+
+
+class SuggestCompetitorsRequest(BaseModel):
+    brand: str
+    market: Optional[str] = "global"
 
 
 class ModelResponse(BaseModel):
     response: str
     mentions: dict[str, int]
+    sentiment: str = "neutral"  # "positive" | "neutral" | "negative"
 
 
 class MultiModelPromptResult(BaseModel):
@@ -76,11 +83,15 @@ class CompetitorScore(BaseModel):
     per_model: dict[str, float]
 
 
+FREE_MODEL_ORDER = ["claude", "gpt4o", "perplexity", "grok", "deepseek"]  # gemini excluded from free tier
+FREE_MODEL_LIMIT = 2
+
 class AnalyzeRequest(BaseModel):
     brand: str
     website: Optional[str] = None
     competitors: list[Competitor] = []
     prompts: list[str]
+    tier: Optional[str] = "free"  # "free" | "pro" | "agency"
 
 
 class AnalyzeResponse(BaseModel):
@@ -91,6 +102,7 @@ class AnalyzeResponse(BaseModel):
     insights: list[str]
     active_models: list[str]
     raw_results: list[MultiModelPromptResult]
+    sentiment_summary: dict[str, int] = {}  # {positive: N, neutral: N, negative: N}
 
 
 # ---------- Helpers ----------
@@ -113,6 +125,58 @@ def count_mentions(text: str, name: str) -> int:
     return len(re.findall(re.escape(name.lower()), text.lower()))
 
 
+POSITIVE_WORDS = {
+    "best", "excellent", "great", "outstanding", "top", "leading", "recommend",
+    "recommended", "popular", "trusted", "reliable", "high-quality", "quality",
+    "innovative", "strong", "powerful", "effective", "superior", "preferred",
+    "well-known", "reputable", "award", "winner", "favorite", "favourite",
+    "impressive", "solid", "robust", "exceptional", "perfect", "ideal",
+}
+
+NEGATIVE_WORDS = {
+    "avoid", "bad", "poor", "worst", "terrible", "overpriced", "expensive",
+    "unreliable", "issues", "problems", "complaints", "disappointing",
+    "criticized", "controversial", "lawsuit", "scandal", "failure",
+    "mediocre", "inferior", "outdated", "slow", "difficult", "lacks",
+}
+
+
+def detect_sentiment(text: str, brand: str) -> str:
+    """Detect sentiment around brand mentions in text."""
+    if not text or brand.lower() not in text.lower():
+        return "neutral"
+
+    text_lower = text.lower()
+    brand_lower = brand.lower()
+
+    # Find contexts around each brand mention (±150 chars)
+    contexts = []
+    idx = 0
+    while True:
+        pos = text_lower.find(brand_lower, idx)
+        if pos == -1:
+            break
+        start = max(0, pos - 150)
+        end = min(len(text_lower), pos + len(brand_lower) + 150)
+        contexts.append(text_lower[start:end])
+        idx = pos + 1
+
+    if not contexts:
+        return "neutral"
+
+    combined = " ".join(contexts)
+    words = set(re.findall(r"\b\w+\b", combined))
+
+    pos_hits = len(words & POSITIVE_WORDS)
+    neg_hits = len(words & NEGATIVE_WORDS)
+
+    if pos_hits > neg_hits:
+        return "positive"
+    elif neg_hits > pos_hits:
+        return "negative"
+    return "neutral"
+
+
 async def call_model(model_id: str, prompt: str) -> str:
     """Call a single model via LiteLLM, return response text."""
     try:
@@ -133,18 +197,28 @@ def score_from_results(
     results_per_model: dict[str, list[dict]],
     total_prompts: int,
 ) -> dict[str, float]:
-    """Compute per-model score for an entity. Returns {model: score}."""
+    """Compute per-model score for an entity. Returns {model: score}.
+
+    Scoring per prompt:
+      +10 if the entity is mentioned at all
+      +5  if entity mentions >= all competitor mentions (only when competitors exist)
+    Max possible = total_prompts * (10 + (5 if competitors else 0))
+    """
+    has_competitors = len(comp_names) > 0
+    points_per_prompt = 15 if has_competitors else 10
+    max_possible = total_prompts * points_per_prompt
+
     scores = {}
-    max_possible = total_prompts * 15
     for model_label, results in results_per_model.items():
         raw = 0
         for r in results:
             mentions = r["mentions"].get(entity, 0)
             if mentions > 0:
                 raw += 10
-                max_comp = max((r["mentions"].get(c, 0) for c in comp_names), default=0)
-                if mentions >= max_comp:
-                    raw += 5
+                if has_competitors:
+                    max_comp = max((r["mentions"].get(c, 0) for c in comp_names), default=0)
+                    if mentions >= max_comp:
+                        raw += 5
         scores[model_label] = round(min(100, (raw / max_possible) * 100) if max_possible > 0 else 0, 1)
     return scores
 
@@ -324,6 +398,36 @@ async def fetch_trend_scores(prompts: list[str], geo: str = "") -> dict[str, int
     return await loop.run_in_executor(None, fetch_trend_scores_pytrends, prompts, geo)
 
 
+@app.post("/suggest-competitors")
+async def suggest_competitors(req: SuggestCompetitorsRequest):
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not set")
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    message = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=200,
+        system="You are a market research expert. The current year is 2026. Return only JSON, no explanation.",
+        messages=[{"role": "user", "content": (
+            f"List 5 direct competitors of '{req.brand}' in its primary market/industry. "
+            f"Market context: {req.market or 'global'}. "
+            "Return ONLY a JSON array of brand name strings, e.g. [\"Brand A\", \"Brand B\", ...]"
+        )}],
+    )
+
+    raw = message.content[0].text.strip()
+    match = re.search(r"\[.*\]", raw, re.DOTALL)
+    if not match:
+        return {"competitors": []}
+    try:
+        competitors = json.loads(match.group())
+        return {"competitors": [str(c).strip() for c in competitors if str(c).strip()][:5]}
+    except Exception:
+        return {"competitors": []}
+
+
 @app.post("/generate-prompts")
 async def generate_prompts(req: GeneratePromptsRequest):
     api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -399,7 +503,7 @@ async def generate_prompts(req: GeneratePromptsRequest):
     message = client.messages.create(
         model="claude-opus-4-8",
         max_tokens=1000,
-        system="You are an expert in brand visibility and AI search behavior.",
+        system="You are an expert in brand visibility and AI search behavior. The current year is 2026.",
         messages=[{"role": "user", "content": user_msg}],
     )
 
@@ -433,6 +537,12 @@ async def analyze(req: AnalyzeRequest):
     if not active_models:
         raise HTTPException(status_code=500, detail="No API keys configured")
 
+    # Limit models for free tier
+    if req.tier == "free":
+        ordered = [m for m in FREE_MODEL_ORDER if m in active_models]
+        limited_keys = ordered[:FREE_MODEL_LIMIT]
+        active_models = {k: v for k, v in active_models.items() if k in limited_keys}
+
     all_entities = [req.brand] + [c.name for c in req.competitors]
     comp_names = [c.name for c in req.competitors]
 
@@ -452,7 +562,8 @@ async def analyze(req: AnalyzeRequest):
 
         for label, response_text in zip(tasks.keys(), responses):
             mentions = {e: count_mentions(response_text, e) for e in all_entities}
-            model_responses[label] = ModelResponse(response=response_text, mentions=mentions)
+            sentiment = detect_sentiment(response_text, req.brand) if req.tier != "free" else "neutral"
+            model_responses[label] = ModelResponse(response=response_text, mentions=mentions, sentiment=sentiment)
             results_per_model[label].append({"mentions": mentions})
 
         raw_results.append(MultiModelPromptResult(prompt=prompt, model_responses=model_responses))
@@ -479,6 +590,13 @@ async def analyze(req: AnalyzeRequest):
         req.brand, overall_score, brand_model_scores, competitor_scores, raw_results
     )
 
+    # Compute sentiment summary across all brand-mentioning responses
+    sentiment_summary = {"positive": 0, "neutral": 0, "negative": 0}
+    for r in raw_results:
+        for mr in r.model_responses.values():
+            if mr.mentions.get(req.brand, 0) > 0:
+                sentiment_summary[mr.sentiment] = sentiment_summary.get(mr.sentiment, 0) + 1
+
     return AnalyzeResponse(
         brand=req.brand,
         overall_score=overall_score,
@@ -487,6 +605,7 @@ async def analyze(req: AnalyzeRequest):
         insights=insights,
         active_models=list(active_models.keys()),
         raw_results=raw_results,
+        sentiment_summary=sentiment_summary,
     )
 
 
@@ -502,14 +621,35 @@ class RecommendationsRequest(BaseModel):
 
 class Recommendation(BaseModel):
     title: str
-    priority: str  # "high" | "medium" | "low"
-    category: str  # "content" | "platform" | "seo" | "pr"
+    priority: str
+    category: str
     description: str
     actions: list[str]
 
 
+class ModelPlaybook(BaseModel):
+    model: str
+    score: float
+    status: str          # "critical" | "weak" | "good" | "strong"
+    headline: str        # e.g. "Not visible on Claude"
+    why: str             # 1-2 sentences: why this model behaves this way
+    actions: list[str]   # 3-4 concrete actions specific to this model
+
+
 class RecommendationsResponse(BaseModel):
-    recommendations: list[Recommendation]
+    per_model: list[ModelPlaybook]
+    priority_actions: list[Recommendation]
+
+
+# Model-specific knowledge for the prompt
+MODEL_CONTEXT = {
+    "claude": "Claude relies on high-quality training data: Wikipedia, structured long-form articles, authoritative reference content, and well-organized FAQ pages. It favors brands with clear factual presence.",
+    "gpt4o":  "GPT-4o uses a broad web corpus + Bing search integration. It favors brands covered in news articles, press releases, industry blogs, and sites with high domain authority.",
+    "gemini": "Gemini is deeply integrated with Google's ecosystem. It draws from Google Search index, Google My Business, structured data (schema.org), YouTube, and Google News.",
+    "perplexity": "Perplexity performs real-time web searches. It heavily weights recent content, Reddit discussions, review sites (G2, Trustpilot, Capterra), and pages with strong backlink profiles.",
+    "grok":   "Grok indexes X/Twitter in real time and broader web. It favors brands with active Twitter/X presence, trending mentions, influencer endorsements, and community discussions.",
+    "deepseek": "DeepSeek is trained on a global + Chinese-language corpus. It favors brands with technical documentation, GitHub presence, developer community content, and academic/research citations.",
+}
 
 
 @app.post("/recommendations", response_model=RecommendationsResponse)
@@ -520,38 +660,6 @@ async def recommendations(req: RecommendationsRequest):
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    # Build a compact summary of results for the prompt
-    zero_prompts = []
-    weak_prompts = []
-    for r in req.raw_results:
-        total_mentions = sum(
-            r.model_responses[m].mentions.get(req.brand, 0)
-            for m in req.active_models
-            if m in r.model_responses
-        )
-        if total_mentions == 0:
-            zero_prompts.append(r.prompt)
-        elif total_mentions <= len(req.active_models):
-            weak_prompts.append(r.prompt)
-
-    worst_model = min(req.model_scores, key=lambda m: req.model_scores[m]) if req.model_scores else None
-    best_model = max(req.model_scores, key=lambda m: req.model_scores[m]) if req.model_scores else None
-
-    competitor_summary = ", ".join(
-        f"{name} (overall: {s.overall})" for name, s in req.competitor_scores.items()
-    ) if req.competitor_scores else "no competitors analyzed"
-
-    analysis_summary = f"""
-Brand: {req.brand}
-Overall AI Visibility Score: {req.overall_score}/100
-Model scores: {json.dumps(req.model_scores)}
-Competitors: {competitor_summary}
-Best performing model: {best_model} ({req.model_scores.get(best_model, 0) if best_model else 0})
-Worst performing model: {worst_model} ({req.model_scores.get(worst_model, 0) if worst_model else 0})
-Prompts with ZERO mentions ({len(zero_prompts)}): {zero_prompts[:5]}
-Prompts with WEAK mentions ({len(weak_prompts)}): {weak_prompts[:5]}
-"""
-
     language_map = {
         "TR": "Turkish", "DE": "German", "FR": "French", "ES": "Spanish",
         "IT": "Italian", "NL": "Dutch", "PL": "Polish", "SE": "Swedish",
@@ -561,71 +669,95 @@ Prompts with WEAK mentions ({len(weak_prompts)}): {weak_prompts[:5]}
         "MX": "Spanish", "BR": "Portuguese", "AR": "Spanish",
         "SA": "Arabic", "AE": "Arabic",
     }
-    response_language = language_map.get(req.market or "global", "English")
-    language_instruction = f"IMPORTANT: Write ALL text in your response (titles, descriptions, actions) in {response_language}. Do not use any other language."
+    lang = language_map.get(req.market or "global", "English")
+    lang_note = f"IMPORTANT: Write ALL text in {lang}. Do not use any other language."
 
-    user_msg = f"""You are an AI brand visibility expert. Based on this analysis, provide actionable recommendations to improve the brand's visibility in AI-generated responses.
+    competitor_summary = ", ".join(
+        f"{n} ({s.overall:.0f}/100)" for n, s in req.competitor_scores.items()
+    ) if req.competitor_scores else "none"
 
-{analysis_summary}
+    # Per-model: which prompts had zero vs weak mentions
+    model_prompt_gaps: dict[str, list[str]] = {}
+    for model in req.active_models:
+        gaps = []
+        for r in req.raw_results:
+            if model in r.model_responses:
+                mentions = r.model_responses[model].mentions.get(req.brand, 0)
+                if mentions == 0:
+                    gaps.append(r.prompt)
+        model_prompt_gaps[model] = gaps[:4]
 
-{language_instruction}
+    model_detail = ""
+    for m in req.active_models:
+        score = req.model_scores.get(m, 0)
+        gaps = model_prompt_gaps.get(m, [])
+        ctx = MODEL_CONTEXT.get(m, "")
+        model_detail += f"\n- {m.upper()}: score={score:.0f}/100, zero-mention prompts={gaps}, context: {ctx}"
 
-Return ONLY a valid JSON array of recommendation objects. Each object must have exactly these fields:
-- "title": short title (max 8 words)
-- "priority": one of "high", "medium", "low"
-- "category": one of "content", "platform", "seo", "pr"
-- "description": 1-2 sentence explanation of why this matters
-- "actions": array of 3-5 specific, concrete action items
+    user_msg = f"""You are an AI brand visibility expert. Generate a per-model strategy playbook for the brand "{req.brand}".
 
-Focus on:
-1. Why the brand is missing from specific prompts and what content to create
-2. Which platforms/sources AI models pull from (Reddit, Wikipedia, review sites, news)
-3. Specific content formats that boost AI visibility (structured data, FAQs, comparison pages)
-4. PR and backlink strategies that influence AI training data
+BRAND DATA:
+- Overall score: {req.overall_score:.0f}/100
+- Market: {req.market}
+- Competitors: {competitor_summary}
+- Active models and their data:{model_detail}
 
-Return 5-7 recommendations. No markdown, no explanation outside JSON.
-[{{"title": "...", "priority": "high", "category": "content", "description": "...", "actions": ["..."]}}]"""
+{lang_note}
+
+Return ONLY valid JSON with this exact structure:
+{{
+  "per_model": [
+    {{
+      "model": "<model_name — one of: {', '.join(req.active_models)}>",
+      "score": <number>,
+      "status": "<critical|weak|good|strong>",
+      "headline": "<8 words max — e.g. 'Not mentioned in any Claude response'>",
+      "why": "<1-2 sentences: why this specific AI model behaves this way for this brand, referencing the model's data sources>",
+      "actions": ["<3-4 concrete, specific actions tailored to HOW THIS MODEL works — not generic advice>"]
+    }}
+  ],
+  "priority_actions": [
+    {{
+      "title": "<8 words max>",
+      "priority": "<high|medium|low>",
+      "category": "<content|platform|seo|pr>",
+      "description": "<1-2 sentences — cross-model impact>",
+      "actions": ["<3-5 concrete steps>"]
+    }}
+  ]
+}}
+
+Rules:
+- status: critical=0-20, weak=21-50, good=51-75, strong=76-100
+- per_model: include ALL {len(req.active_models)} active models
+- priority_actions: 5 items covering the highest-impact cross-model improvements
+- actions in per_model must be specific to that model's ecosystem (e.g. for Gemini: Google My Business, schema.org; for Grok: X/Twitter strategy)
+- No markdown, no text outside JSON"""
 
     message = client.messages.create(
         model="claude-opus-4-8",
-        max_tokens=2000,
+        max_tokens=5000,
         messages=[{"role": "user", "content": user_msg}],
     )
 
     raw = message.content[0].text.strip()
-
-    # Strip markdown code fences if present
     raw = re.sub(r"^```[a-z]*\n?", "", raw, flags=re.MULTILINE)
     raw = re.sub(r"```$", "", raw, flags=re.MULTILINE)
     raw = raw.strip()
 
-    # Extract the JSON array — grab from first [ to last ]
-    start = raw.find("[")
-    end = raw.rfind("]")
-    if start == -1 or end == -1 or end <= start:
-        raise HTTPException(status_code=500, detail="No JSON array found in recommendations response")
-
-    json_str = raw[start:end + 1]
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start == -1 or end == -1:
+        raise HTTPException(status_code=500, detail="No JSON object found in response")
 
     try:
-        recs_raw = json.loads(json_str)
-        recs = [Recommendation(**r) for r in recs_raw]
-    except json.JSONDecodeError as e:
-        # Try to salvage: truncate at last complete object
-        last_close = json_str.rfind("},")
-        if last_close != -1:
-            salvaged = json_str[:last_close + 1] + "]"
-            try:
-                recs_raw = json.loads(salvaged)
-                recs = [Recommendation(**r) for r in recs_raw]
-            except Exception:
-                raise HTTPException(status_code=500, detail=f"Failed to parse recommendations: {e}")
-        else:
-            raise HTTPException(status_code=500, detail=f"Failed to parse recommendations: {e}")
+        data = json.loads(raw[start:end + 1])
+        per_model = [ModelPlaybook(**m) for m in data.get("per_model", [])]
+        priority_actions = [Recommendation(**r) for r in data.get("priority_actions", [])]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse recommendations: {e}")
 
-    return RecommendationsResponse(recommendations=recs)
+    return RecommendationsResponse(per_model=per_model, priority_actions=priority_actions)
 
 
 @app.get("/health")

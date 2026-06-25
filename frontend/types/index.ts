@@ -11,6 +11,7 @@ export interface Competitor {
 export interface ModelResponse {
   response: string;
   mentions: Record<string, number>;
+  sentiment?: "positive" | "neutral" | "negative";
 }
 
 export interface MultiModelPromptResult {
@@ -31,4 +32,5 @@ export interface AnalyzeResponse {
   insights: string[];
   active_models: string[];
   raw_results: MultiModelPromptResult[];
+  sentiment_summary: { positive: number; neutral: number; negative: number };
 }

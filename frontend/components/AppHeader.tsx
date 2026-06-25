@@ -18,8 +18,8 @@ export default function AppHeader({ onLogoClick, steps, currentStepIndex = 0, sh
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-3.5">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
 
-        {/* Logo */}
-        <button onClick={onLogoClick} className="text-left">
+        {/* Logo — always navigates to / */}
+        <Link href="/" onClick={onLogoClick} className="text-left">
           <div className="flex flex-col items-start">
             <span className="font-extrabold text-lg leading-none -tracking-[0.5px]">
               <span style={{ color: "#0f172a" }}>Visibility</span>
@@ -29,7 +29,7 @@ export default function AppHeader({ onLogoClick, steps, currentStepIndex = 0, sh
               AI Brand Intelligence
             </span>
           </div>
-        </button>
+        </Link>
 
         {/* Center — step indicators + start over */}
         <div className="hidden sm:flex items-center gap-3">
