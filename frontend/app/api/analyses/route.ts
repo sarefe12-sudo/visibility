@@ -16,24 +16,17 @@ export async function GET() {
   const { data: user } = await supabase.from('users').select('id, tier').eq('clerk_id', userId).single()
   if (!user) return NextResponse.json({ analyses: [], monthly_count: 0 })
 
-  const limit = TIER_LIMITS[user.tier as keyof typeof TIER_LIMITS]
-  // history_days: 0 means "no history restriction" for free (they only have 1 analysis anyway)
-  // Use null to fetch all — the limit(50) cap keeps it safe
-  const cutoff = limit.history_days > 0
-    ? new Date(Date.now() - limit.history_days * 86400000).toISOString()
-    : null
-
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  let query = supabase
+  // Always return all analyses — we never delete history regardless of tier.
+  // Monthly new-analysis quota is still enforced separately.
+  const query = supabase
     .from('analyses')
     .select('id, brand, market, overall_score, active_models, competitor_count, prompt_count, result_snapshot, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(50)
-
-  if (cutoff) query = query.gte('created_at', cutoff)
+    .limit(200)
 
   const [{ data: analyses, error }, { count: monthly_count }] = await Promise.all([
     query,
