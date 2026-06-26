@@ -180,8 +180,14 @@ export default function ContentStudioPanel({ data, market, tier, analysisId, pla
         </div>
         <div className="flex items-center gap-3">
           {usage && (
-            <span className="text-xs text-slate-400 font-medium">
-              {usage.count}/{usage.limit} used this month
+            <span className="text-xs font-medium flex items-center gap-1.5">
+              {usage.count >= usage.limit ? (
+                <span className="text-rose-500">Monthly limit reached · resets 1st</span>
+              ) : usage.count === 0 ? (
+                <span className="text-emerald-600">{usage.limit} content plans included this month</span>
+              ) : (
+                <span className="text-slate-400">{usage.limit - usage.count} of {usage.limit} plans remaining</span>
+              )}
             </span>
           )}
           {!posts && !loading && (
