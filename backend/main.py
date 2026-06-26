@@ -36,7 +36,7 @@ def get_active_models() -> dict[str, str]:
     candidates = {
         "claude":     ("ANTHROPIC_API_KEY", "anthropic/claude-opus-4-8"),
         "gpt4o":      ("OPENAI_API_KEY",    "openai/gpt-4o"),
-        "gemini":     ("GEMINI_API_KEY",    "gemini/gemini-2.0-flash"),
+        "gemini":     ("GEMINI_API_KEY",    "gemini/gemini-2.5-flash"),
         "perplexity": ("PERPLEXITY_API_KEY","perplexity/sonar"),
         "grok":       ("XAI_API_KEY",       "xai/grok-3"),
         "deepseek":   ("DEEPSEEK_API_KEY",  "deepseek/deepseek-chat"),
@@ -198,7 +198,7 @@ async def call_model(model_id: str, prompt: str) -> tuple[str, int, int]:
 MODEL_COSTS: dict[str, tuple[float, float]] = {
     "anthropic/claude-opus-4-8": (5.0, 25.0),
     "openai/gpt-4o":             (2.5, 10.0),
-    "gemini/gemini-2.0-flash":   (0.075, 0.30),
+    "gemini/gemini-2.5-flash":   (0.15, 0.60),
     "perplexity/sonar":          (1.0, 1.0),
     "xai/grok-3":                (3.0, 15.0),
     "deepseek/deepseek-chat":    (0.14, 0.28),
