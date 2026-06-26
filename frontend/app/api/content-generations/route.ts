@@ -101,9 +101,9 @@ For each post return a JSON object with these exact fields:
 - priority: "high" | "medium" | "low"
 - keywords: array of 5 target keywords
 - read_time: estimated read time in minutes (integer)
-- content: full blog post in markdown format with proper H2/H3 headings, at least 600 words, natural keyword integration, ends with a clear CTA
+- content: full blog post in markdown format with proper H2/H3 headings, 400-600 words, natural keyword integration, ends with a clear CTA
 
-Return ONLY a valid JSON array of exactly 5 objects. No explanation, no markdown wrapper.`
+Return ONLY a raw JSON array of exactly 5 objects. No explanation, no markdown code fences, no wrapper text. Start your response with [ and end with ].`
 
   const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -114,7 +114,7 @@ Return ONLY a valid JSON array of exactly 5 objects. No explanation, no markdown
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 8000,
+      max_tokens: 16000,
       messages: [{ role: 'user', content: prompt }],
     }),
   })
@@ -130,11 +130,13 @@ Return ONLY a valid JSON array of exactly 5 objects. No explanation, no markdown
 
   let posts: unknown[]
   try {
-    const jsonMatch = rawText.match(/\[[\s\S]*\]/)
-    posts = JSON.parse(jsonMatch ? jsonMatch[0] : rawText)
+    // Strip markdown code fences if present
+    const stripped = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+    const jsonMatch = stripped.match(/\[[\s\S]*\]/)
+    posts = JSON.parse(jsonMatch ? jsonMatch[0] : stripped)
     if (!Array.isArray(posts) || posts.length === 0) throw new Error('Invalid output')
   } catch {
-    console.error('[content-gen] Parse error, raw:', rawText.slice(0, 500))
+    console.error('[content-gen] Parse error, raw:', rawText.slice(0, 800))
     return NextResponse.json({ error: 'Failed to parse AI output' }, { status: 500 })
   }
 
