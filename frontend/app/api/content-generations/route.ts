@@ -121,8 +121,9 @@ Return ONLY a raw JSON array of exactly 5 objects. No explanation, no markdown c
 
   if (!aiRes.ok) {
     const err = await aiRes.json().catch(() => ({}))
-    console.error('[content-gen] Claude error:', err)
-    return NextResponse.json({ error: 'AI generation failed' }, { status: 500 })
+    console.error('[content-gen] Claude error:', aiRes.status, JSON.stringify(err))
+    const detail = err?.error?.message ?? err?.message ?? `HTTP ${aiRes.status}`
+    return NextResponse.json({ error: `AI generation failed: ${detail}` }, { status: 500 })
   }
 
   const aiData = await aiRes.json()
