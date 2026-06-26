@@ -346,7 +346,7 @@ export default function Home() {
             onClick={() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             className="flex items-center gap-2.5 rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-orange-600 transition-colors"
           >
-            Check your AI score — free
+            Check your AI score
             <svg className="animate-bounce" width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 5v14M5 12l7 7 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
