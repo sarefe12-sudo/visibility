@@ -136,9 +136,11 @@ export default function PrivacyPage() {
             ))}
           </div>
 
-          <div className="mt-12 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-500">
-            <p className="font-semibold text-slate-700 mb-1">İletişim / Contact</p>
-            <p>KVKK başvuruları ve gizlilik ile ilgili tüm sorularınız için: <a href="mailto:privacy@visibilityradar.ai" className="text-indigo-600 hover:underline">privacy@visibilityradar.ai</a></p>
+          <div className="mt-12 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-500 space-y-1">
+            <p className="font-semibold text-slate-700 mb-2">İletişim / Contact</p>
+            <p>KVKK başvuruları için: <a href="mailto:privacy@visibilityradar.ai" className="text-indigo-600 hover:underline">privacy@visibilityradar.ai</a></p>
+            <p>Genel iletişim: <a href="mailto:info@visibilityradar.ai" className="text-indigo-600 hover:underline">info@visibilityradar.ai</a></p>
+            <p>Adres: Kuleli Sokak No:45/6, Gaziosmanpaşa (GOP), Ankara</p>
           </div>
         </div>
       </article>
