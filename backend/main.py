@@ -36,8 +36,8 @@ def get_active_models() -> dict[str, str]:
     candidates = {
         "claude":     ("ANTHROPIC_API_KEY", "anthropic/claude-opus-4-8"),
         "gpt4o":      ("OPENAI_API_KEY",    "openai/gpt-4o"),
-        "gemini":     ("GEMINI_API_KEY",    "gemini/gemini-1.5-pro"),
-        "perplexity": ("PERPLEXITY_API_KEY","perplexity/sonar-pro"),
+        "gemini":     ("GEMINI_API_KEY",    "gemini/gemini-2.0-flash"),
+        "perplexity": ("PERPLEXITY_API_KEY","perplexity/sonar"),
         "grok":       ("XAI_API_KEY",       "xai/grok-3"),
         "deepseek":   ("DEEPSEEK_API_KEY",  "deepseek/deepseek-chat"),
     }
@@ -191,15 +191,15 @@ async def call_model(model_id: str, prompt: str) -> tuple[str, int, int]:
         usage = response.usage
         return text, getattr(usage, "prompt_tokens", 0), getattr(usage, "completion_tokens", 0)
     except Exception as e:
-        return f"[error: {str(e)[:100]}]", 0, 0
+        return f"[error: {str(e)[:300]}]", 0, 0
 
 
 # Cost per 1M tokens (input, output) USD
 MODEL_COSTS: dict[str, tuple[float, float]] = {
     "anthropic/claude-opus-4-8": (5.0, 25.0),
     "openai/gpt-4o":             (2.5, 10.0),
-    "gemini/gemini-1.5-pro":     (1.25, 5.0),
-    "perplexity/sonar-pro":      (3.0, 15.0),
+    "gemini/gemini-2.0-flash":   (0.075, 0.30),
+    "perplexity/sonar":          (1.0, 1.0),
     "xai/grok-3":                (3.0, 15.0),
     "deepseek/deepseek-chat":    (0.14, 0.28),
 }
