@@ -61,5 +61,5 @@ export interface Analysis {
 export const TIER_LIMITS = {
   free:   { analyses: 1,   prompts: 10, competitors: 1,  models: 2, history_days: 30,  pdf: false, monthly_alerts: false, white_label: false, sentiment: false, recommendations: false, content_generations: 0  },
   pro:    { analyses: 10,  prompts: 25, competitors: 5,  models: 6, history_days: 90,  pdf: true,  monthly_alerts: true,  white_label: false, sentiment: true,  recommendations: true,  content_generations: 10 },
-  agency: { analyses: 999, prompts: 50, competitors: 10, models: 6, history_days: 365, pdf: true,  monthly_alerts: true,  white_label: true,  sentiment: true,  recommendations: true,  content_generations: 10 },
+  agency: { analyses: 999, prompts: 50, competitors: 10, models: 6, history_days: 365, pdf: true,  monthly_alerts: true,  white_label: true,  sentiment: true,  recommendations: true,  content_generations: 999 },
 }

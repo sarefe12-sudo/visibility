@@ -181,7 +181,9 @@ export default function ContentStudioPanel({ data, market, tier, analysisId, pla
         <div className="flex items-center gap-3">
           {usage && (
             <span className="text-xs font-medium flex items-center gap-1.5">
-              {usage.count >= usage.limit ? (
+              {usage.limit >= 999 ? (
+                <span className="text-emerald-600">Unlimited content plans</span>
+              ) : usage.count >= usage.limit ? (
                 <span className="text-rose-500">Monthly limit reached · resets 1st</span>
               ) : usage.count === 0 ? (
                 <span className="text-emerald-600">{usage.limit} content plans included this month</span>
