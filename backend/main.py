@@ -178,18 +178,23 @@ def detect_sentiment(text: str, brand: str) -> str:
     return "neutral"
 
 
+GEMINI_SYSTEM = (
+    "You are a helpful assistant. When answering questions about the best products, services, "
+    "or brands, always provide specific brand names and concrete recommendations. "
+    "List actual company and product names rather than giving generic advice."
+)
+
 async def call_model(model_id: str, prompt: str) -> tuple[str, int, int]:
     """Call a single model via LiteLLM, return (response_text, prompt_tokens, completion_tokens)."""
     is_gemini = model_id.startswith("gemini/")
     retries = 3 if is_gemini else 1
+    messages = [{"role": "user", "content": prompt}]
+    kwargs: dict = {"model": model_id, "messages": messages, "max_tokens": 400, "timeout": 45}
+    if is_gemini:
+        kwargs["messages"] = [{"role": "system", "content": GEMINI_SYSTEM}, {"role": "user", "content": prompt}]
     for attempt in range(retries):
         try:
-            response = await litellm.acompletion(
-                model=model_id,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=400,
-                timeout=45,
-            )
+            response = await litellm.acompletion(**kwargs)
             text = response.choices[0].message.content or ""
             usage = response.usage
             return text, getattr(usage, "prompt_tokens", 0), getattr(usage, "completion_tokens", 0)
