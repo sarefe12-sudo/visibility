@@ -44,7 +44,7 @@ const PLANS = [
       { text: "Competitor tracking", included: false },
       { text: "Sentiment analysis", included: false },
       { text: "PDF report", included: false },
-      { text: "AI Content Studio", included: false },
+      { text: "AI Content Studio (Pro only)", included: false },
     ],
     cta: "Get started free",
     ctaStyle: "border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50",
@@ -67,7 +67,7 @@ const PLANS = [
       { text: "Sentiment analysis", included: true },
       { text: "Monthly AI score alerts", included: true },
       { text: "PDF report download", included: true },
-      { text: "AI Content Studio — 10 generations/mo", included: true },
+      { text: "AI Content Studio — 5 blog posts per analysis, 10×/mo", included: true },
     ],
     cta: "Claim Launch Price →",
     ctaStyle: "bg-indigo-600 text-white hover:bg-indigo-700",
@@ -88,7 +88,7 @@ const PLANS = [
       { text: "Monthly AI score alerts", included: true },
       { text: "White-label client portal", included: true },
       { text: "PDF reports for all clients", included: true },
-      { text: "AI Content Studio — 10 generations/mo", included: true },
+      { text: "AI Content Studio — unlimited, Claude-powered blog plans", included: true },
       { text: "API access — coming soon", included: true, soon: true },
     ],
     cta: "Start Agency",
@@ -246,7 +246,7 @@ export default function PricingPage() {
         </div>
 
         {/* Feature explainers */}
-        <div className="mx-auto max-w-5xl mt-12 grid sm:grid-cols-2 gap-6">
+        <div className="mx-auto max-w-5xl mt-12 grid sm:grid-cols-3 gap-6">
 
           <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-6">
             <div className="flex items-start gap-4">
@@ -259,6 +259,21 @@ export default function PricingPage() {
                   recommending you — and why. No manual tracking needed.
                 </p>
                 <p className="text-xs text-indigo-500 mt-3 font-semibold">✓ Pro & Agency plans</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xl">✍️</div>
+              <div>
+                <p className="text-sm font-bold text-emerald-900 mb-1.5">AI Content Studio</p>
+                <p className="text-sm text-emerald-800 leading-relaxed">
+                  After every analysis, Claude writes 5 SEO-optimized blog posts tailored to your exact
+                  visibility gaps — targeting the AI models where your brand is weakest. Real content,
+                  ready to publish. Not templates. Not fluff.
+                </p>
+                <p className="text-xs text-emerald-600 mt-3 font-semibold">✓ Pro: 10 plans/mo · Agency: unlimited</p>
               </div>
             </div>
           </div>
