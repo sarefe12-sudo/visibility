@@ -23,7 +23,7 @@ export async function GET() {
   // Monthly new-analysis quota is still enforced separately.
   const query = supabase
     .from('analyses')
-    .select('id, brand, market, overall_score, active_models, competitor_count, prompt_count, result_snapshot, created_at')
+    .select('id, brand, market, overall_score, active_models, competitor_count, prompt_count, result_snapshot, playbook, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(200)
@@ -82,6 +82,28 @@ export async function POST(req: Request) {
   await supabase.rpc('increment_analyses_count', { user_id_input: user.id })
 
   return NextResponse.json({ analysis })
+}
+
+// PATCH /api/analyses — save generated playbook to an existing analysis
+export async function PATCH(req: Request) {
+  const { userId } = await auth()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data: user } = await supabase.from('users').select('id').eq('clerk_id', userId).single()
+  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+  const { analysis_id, playbook } = await req.json()
+  if (!analysis_id || !playbook) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+
+  // Verify ownership before updating
+  const { error } = await supabase
+    .from('analyses')
+    .update({ playbook })
+    .eq('id', analysis_id)
+    .eq('user_id', user.id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
 }
 
 // HEAD /api/analyses — pre-flight limit check before calling backend

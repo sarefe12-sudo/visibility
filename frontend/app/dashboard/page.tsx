@@ -111,7 +111,7 @@ export default function DashboardPage() {
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<{ data: AnalyzeResponse; market: string; previousScore?: number } | null>(null);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<{ data: AnalyzeResponse; market: string; previousScore?: number; analysisId?: string; savedPlaybook?: Analysis['playbook'] | null } | null>(null);
   const [showCancel, setShowCancel] = useState(false);
   const [cancelDone, setCancelDone] = useState(false);
 
@@ -165,7 +165,7 @@ export default function DashboardPage() {
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 5l-7 7 7 7"/></svg>
             Back to Dashboard
           </button>
-          <Dashboard data={selectedAnalysis.data} market={selectedAnalysis.market} fromHistory tier={tier as "free" | "pro" | "agency"} previousScore={selectedAnalysis.previousScore} />
+          <Dashboard data={selectedAnalysis.data} market={selectedAnalysis.market} fromHistory tier={tier as "free" | "pro" | "agency"} previousScore={selectedAnalysis.previousScore} analysisId={selectedAnalysis.analysisId} savedPlaybook={selectedAnalysis.savedPlaybook} />
         </div>
       </main>
     );
@@ -295,6 +295,8 @@ export default function DashboardPage() {
                     data: a.result_snapshot as unknown as AnalyzeResponse,
                     market: a.market,
                     previousScore: prevForBrand?.overall_score,
+                    analysisId: a.id,
+                    savedPlaybook: a.playbook,
                   })}
                   className="rounded-2xl border border-slate-200 bg-white px-5 py-4 flex items-center justify-between gap-4 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
                 >

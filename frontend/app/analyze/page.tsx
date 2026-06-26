@@ -32,6 +32,8 @@ export default function AnalyzePage() {
   const [monthlyCount, setMonthlyCount] = useState(0);
   const [pastAnalyses, setPastAnalyses] = useState<Analysis[]>([]);
   const [previousScore, setPreviousScore] = useState<number | undefined>(undefined);
+  const [currentAnalysisId, setCurrentAnalysisId] = useState<string | undefined>(undefined);
+  const [previousRecommendations, setPreviousRecommendations] = useState<{ title: string; priority: string; category: string; description: string; actions: string[] }[]>([]);
 
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -138,8 +140,15 @@ export default function AnalyzePage() {
       if (saveData.error === "monthly_limit_reached" || saveData.error === "free_limit_reached") {
         setError("Limit reached — this analysis was not saved.");
       } else {
+        setCurrentAnalysisId(saveData.analysis?.id);
         setMonthlyCount(c => c + 1);
         if (appUser) setAppUser({ ...appUser, analyses_count: appUser.analyses_count + 1 });
+        // Collect previous recommendations for same brand to avoid repeating
+        const brandLower = brand.toLowerCase().trim();
+        const prevAnalysisForBrand = pastAnalyses.find(a => a.brand.toLowerCase().trim() === brandLower && a.playbook);
+        if (prevAnalysisForBrand?.playbook) {
+          setPreviousRecommendations(prevAnalysisForBrand.playbook.priority_actions ?? []);
+        }
       }
     } catch (e: unknown) { setError(e instanceof Error ? e.message : "Unknown error"); }
     finally { setAnalyzing(false); }
@@ -148,6 +157,7 @@ export default function AnalyzePage() {
   function reset() {
     setStep("form"); setResult(null);
     setPromptsWithTrend([]); setError(null); setPreviousScore(undefined);
+    setCurrentAnalysisId(undefined); setPreviousRecommendations([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -309,7 +319,7 @@ export default function AnalyzePage() {
         <section className="bg-slate-50 px-4 sm:px-6 pt-4 pb-20">
           <div className="mx-auto max-w-5xl">
             {error && <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">{error}</div>}
-            <Dashboard data={result} market={market} tier={tier} locked={tier === "free"} previousScore={previousScore} />
+            <Dashboard data={result} market={market} tier={tier} locked={tier === "free"} previousScore={previousScore} analysisId={currentAnalysisId} previousRecommendations={previousRecommendations} />
           </div>
         </section>
         </>

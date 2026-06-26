@@ -530,6 +530,22 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Content Studio teaser for non-pro users */}
+            <div className="mb-6 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-emerald-800">AI Content Studio <span className="ml-1 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">PRO</span></p>
+                  <p className="text-xs text-emerald-700 mt-0.5">Get 5 AI-tailored blog posts to improve {result.brand}&apos;s visibility — automatically generated from your analysis.</p>
+                </div>
+              </div>
+              <a href="/pricing" className="flex-shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white transition-colors whitespace-nowrap">
+                Unlock Content Studio →
+              </a>
+            </div>
+
             <Dashboard data={result} market={market} locked={!isSignedIn} tier="free" />
 
             {/* Bottom CTA */}

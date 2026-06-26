@@ -9,8 +9,15 @@ import VisibilityChart from "./VisibilityChart";
 import InsightsList from "./InsightsList";
 import PromptsTable from "./PromptsTable";
 import RecommendationsPanel from "./RecommendationsPanel";
+import ContentStudioPanel from "./ContentStudioPanel";
 
-interface Props { data: AnalyzeResponse; market?: string; fromHistory?: boolean; locked?: boolean; tier?: "free" | "pro" | "agency"; previousScore?: number; }
+interface SavedPlaybook {
+  per_model: { model: string; score: number; status: string; headline: string; why: string; actions: string[] }[];
+  priority_actions: { title: string; priority: string; category: string; description: string; actions: string[] }[];
+  generated_at?: string;
+}
+
+interface Props { data: AnalyzeResponse; market?: string; fromHistory?: boolean; locked?: boolean; tier?: "free" | "pro" | "agency"; previousScore?: number; analysisId?: string; savedPlaybook?: SavedPlaybook | null; previousRecommendations?: SavedPlaybook['priority_actions']; }
 
 const MARKET_LABELS: Record<string, string> = {
   global: "Global", TR: "Turkey", US: "USA", GB: "UK", DE: "Germany",
@@ -27,7 +34,7 @@ const MODEL_LABELS: Record<string, string> = {
 };
 const COMP_COLORS = ["#10a37f", "#94a3b8", "#f59e0b", "#f43f5e", "#8b5cf6"];
 
-function PremiumDashboard({ data, market = "global", fromHistory = false, locked = false, tier = "pro", previousScore }: Props) {
+function PremiumDashboard({ data, market = "global", fromHistory = false, locked = false, tier = "pro", previousScore, analysisId, savedPlaybook, previousRecommendations }: Props) {
   const [animated, setAnimated] = useState(false);
   useEffect(() => { const t = setTimeout(() => setAnimated(true), 100); return () => clearTimeout(t); }, []);
 
@@ -216,9 +223,23 @@ function PremiumDashboard({ data, market = "global", fromHistory = false, locked
       )}
 
       {/* Row 3: Recommendations */}
-      <RecommendationsPanel data={data} market={market} historyMode={fromHistory} locked={locked} tier={tier} />
+      <RecommendationsPanel data={data} market={market} historyMode={fromHistory} locked={locked} tier={tier} analysisId={analysisId}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        savedPlaybook={savedPlaybook as any}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        previousRecommendations={previousRecommendations as any}
+      />
 
-      {/* Row 4: Key findings */}
+      {/* Row 4: Content Studio */}
+      <ContentStudioPanel
+        data={data}
+        market={market}
+        tier={tier}
+        analysisId={analysisId}
+        playbook={savedPlaybook}
+      />
+
+      {/* Row 5: Key findings */}
       <InsightsList insights={data.insights} />
 
       {/* Row 5: Raw prompt results */}
@@ -227,10 +248,10 @@ function PremiumDashboard({ data, market = "global", fromHistory = false, locked
   );
 }
 
-export default function Dashboard({ data, market = "global", fromHistory = false, locked = false, tier = "free", previousScore }: Props) {
+export default function Dashboard({ data, market = "global", fromHistory = false, locked = false, tier = "free", previousScore, analysisId, savedPlaybook, previousRecommendations }: Props) {
   // Premium layout for Pro and Agency
   if (tier !== "free") {
-    return <PremiumDashboard data={data} market={market} fromHistory={fromHistory} locked={locked} tier={tier} previousScore={previousScore} />;
+    return <PremiumDashboard data={data} market={market} fromHistory={fromHistory} locked={locked} tier={tier} previousScore={previousScore} analysisId={analysisId} savedPlaybook={savedPlaybook} previousRecommendations={previousRecommendations} />;
   }
 
   // Legacy layout for free tier (landing page demo — do not touch)

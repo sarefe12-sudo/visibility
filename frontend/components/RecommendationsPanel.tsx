@@ -47,6 +47,9 @@ interface Props {
   historyMode?: boolean;
   locked?: boolean;
   tier?: string;
+  analysisId?: string;
+  savedPlaybook?: PlaybookData | null;
+  previousRecommendations?: PriorityAction[];
 }
 
 const MODEL_META: Record<string, { color: string; bg: string; border: string; label: string }> = {
@@ -78,21 +81,22 @@ const CATEGORY_STYLE: Record<string, { label: string; color: string }> = {
   pr:       { label: "PR & Brand", color: "bg-orange-100 text-orange-600" },
 };
 
-export default function RecommendationsPanel({ data, market = "global", historyMode = false, locked = false, tier }: Props) {
-  const [playbook, setPlaybook] = useState<PlaybookData | null>(null);
+export default function RecommendationsPanel({ data, market = "global", historyMode = false, locked = false, tier, analysisId, savedPlaybook, previousRecommendations }: Props) {
+  const [playbook, setPlaybook] = useState<PlaybookData | null>(savedPlaybook ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedModel, setExpandedModel] = useState<string | null>(null);
+  const [expandedModel, setExpandedModel] = useState<string | null>(savedPlaybook?.per_model?.[0]?.model ?? null);
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
 
   const isPremium = tier === "pro" || tier === "agency";
   const autoFired = useRef(false);
 
-  // Auto-generate for everyone except history views — free gets teaser, pro gets full
-  // historyMode: old snapshot data → generating new recommendations would be misleading
+  // Auto-generate unless: history view with saved playbook, or already generated
   useEffect(() => {
-    if (historyMode || autoFired.current) return;
+    if (autoFired.current) return;
+    if (historyMode && savedPlaybook) return; // already have it from DB
+    if (historyMode && !savedPlaybook) return; // old analysis, no playbook — skip
     autoFired.current = true;
     generate();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -100,18 +104,23 @@ export default function RecommendationsPanel({ data, market = "global", historyM
   async function generate() {
     setLoading(true); setError(null);
     try {
+      const body: Record<string, unknown> = {
+        brand: data.brand,
+        overall_score: data.overall_score,
+        model_scores: data.model_scores,
+        competitor_scores: data.competitor_scores,
+        active_models: data.active_models,
+        raw_results: data.raw_results,
+        market,
+      };
+      // Pass previous recommendations so Claude avoids repeating already-done items
+      if (previousRecommendations && previousRecommendations.length > 0) {
+        body.previous_recommendations = previousRecommendations.map(r => r.title);
+      }
       const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/recommendations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brand: data.brand,
-          overall_score: data.overall_score,
-          model_scores: data.model_scores,
-          competitor_scores: data.competitor_scores,
-          active_models: data.active_models,
-          raw_results: data.raw_results,
-          market,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`Error: ${res.status}`);
       const d: PlaybookData = await res.json();
@@ -120,6 +129,17 @@ export default function RecommendationsPanel({ data, market = "global", historyM
       setPlaybook(d);
       // Auto-open the first (worst) model card
       if (d.per_model.length > 0) setExpandedModel(d.per_model[0].model);
+      // Persist playbook to Supabase so it's available in history view
+      if (analysisId && isPremium) {
+        fetch("/api/analyses", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            analysis_id: analysisId,
+            playbook: { ...d, generated_at: new Date().toISOString() },
+          }),
+        }).catch(() => {});
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
