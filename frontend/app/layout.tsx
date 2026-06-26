@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import Script from "next/script";
 import "./globals.css";
-import Footer from "@/components/Footer";
+import Footer from "@/components/Footer"
+import CookieBanner from "@/components/CookieBanner";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -87,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className="min-h-full flex flex-col">
           <div className="flex-1">{children}</div>
           <Footer />
+          <CookieBanner />
         </body>
       </html>
     </ClerkProvider>
