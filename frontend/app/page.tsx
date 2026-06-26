@@ -551,9 +551,23 @@ export default function Home() {
             {/* Bottom CTA */}
             <div className="mt-10 rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-sm">
               <p className="text-lg font-extrabold text-slate-900 mb-1">This was your free demo.</p>
-              <p className="text-sm text-slate-500 mb-5 max-w-md mx-auto">
-                Create a free account to save this result. Upgrade to Pro for monthly tracking, 6 AI models, competitor analysis and full recommendations.
+              <p className="text-sm text-slate-500 mb-3 max-w-lg mx-auto">
+                Create a free account to save this result. Upgrade to Pro for monthly tracking, 6 AI models, competitor analysis, and full recommendations.
               </p>
+              <div className="flex items-center justify-center gap-5 mb-5 flex-wrap">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <span className="h-5 w-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-[10px]">✦</span>
+                  <span>6 AI model strategies unlocked</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <span className="h-5 w-5 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-[10px]">✍</span>
+                  <span>AI blog content tailored to your visibility gaps</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <span className="h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-[10px]">↻</span>
+                  <span>Monthly tracking &amp; competitor analysis</span>
+                </div>
+              </div>
               <div className="flex gap-3 justify-center flex-wrap">
                 <a href="/sign-up" className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all">
                   Create free account →
