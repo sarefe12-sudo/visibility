@@ -17,6 +17,7 @@ const nav = [
   { href: '/admin/tokens',        label: 'Token & Cost',   icon: '⚡' },
   { href: '/admin/subscriptions', label: 'Subscriptions',  icon: '💳' },
   { href: '/admin/retention',     label: 'Retention',      icon: '🔄' },
+  { href: '/admin/leads',         label: 'Leads',          icon: '🎯' },
   { href: '/admin/contacts',      label: 'Contacts',       icon: '✉️' },
   { href: '/admin/audit',         label: 'Audit Logs',     icon: '📋' },
   { href: '/admin/health',        label: 'System Health',  icon: '❤️' },
