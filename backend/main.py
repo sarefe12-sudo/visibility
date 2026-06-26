@@ -180,18 +180,30 @@ def detect_sentiment(text: str, brand: str) -> str:
 
 async def call_model(model_id: str, prompt: str) -> tuple[str, int, int]:
     """Call a single model via LiteLLM, return (response_text, prompt_tokens, completion_tokens)."""
-    try:
-        response = await litellm.acompletion(
-            model=model_id,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=400,
-            timeout=30,
-        )
-        text = response.choices[0].message.content or ""
-        usage = response.usage
-        return text, getattr(usage, "prompt_tokens", 0), getattr(usage, "completion_tokens", 0)
-    except Exception as e:
-        return f"[error: {str(e)[:300]}]", 0, 0
+    is_gemini = model_id.startswith("gemini/")
+    retries = 3 if is_gemini else 1
+    for attempt in range(retries):
+        try:
+            response = await litellm.acompletion(
+                model=model_id,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=400,
+                timeout=45,
+            )
+            text = response.choices[0].message.content or ""
+            usage = response.usage
+            return text, getattr(usage, "prompt_tokens", 0), getattr(usage, "completion_tokens", 0)
+        except litellm.RateLimitError:
+            if attempt < retries - 1:
+                await asyncio.sleep(6 * (attempt + 1))  # 6s, 12s backoff
+                continue
+            return "[error: Gemini rate limit — try again in a moment]", 0, 0
+        except Exception as e:
+            if is_gemini and attempt < retries - 1:
+                await asyncio.sleep(4)
+                continue
+            return f"[error: {str(e)[:300]}]", 0, 0
+    return "[error: max retries exceeded]", 0, 0
 
 
 # Cost per 1M tokens (input, output) USD
@@ -598,7 +610,11 @@ async def analyze(req: AnalyzeRequest):
     # Accumulate token usage per model label
     token_totals: dict[str, tuple[int, int]] = {m: (0, 0) for m in active_models}
 
-    for prompt in req.prompts:
+    for prompt_idx, prompt in enumerate(req.prompts):
+        # Add small delay between prompts to avoid Gemini rate limits
+        if prompt_idx > 0 and "gemini" in active_models:
+            await asyncio.sleep(2)
+
         # Fire all models concurrently for this prompt
         tasks = {
             label: call_model(model_id, prompt)
