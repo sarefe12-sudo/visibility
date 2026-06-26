@@ -67,7 +67,7 @@ const PLANS = [
       { text: "Sentiment analysis", included: true },
       { text: "Monthly AI score alerts", included: true },
       { text: "PDF report download", included: true },
-      { text: "AI Content Studio — 5 blog posts per analysis, 10×/mo", included: true },
+      { text: "AI Content Studio — 5 blog posts per analysis", included: true },
     ],
     cta: "Claim Launch Price →",
     ctaStyle: "bg-indigo-600 text-white hover:bg-indigo-700",
@@ -88,7 +88,7 @@ const PLANS = [
       { text: "Monthly AI score alerts", included: true },
       { text: "White-label client portal", included: true },
       { text: "PDF reports for all clients", included: true },
-      { text: "AI Content Studio — unlimited, Claude-powered blog plans", included: true },
+      { text: "AI Content Studio — unlimited blog plans", included: true },
       { text: "API access — coming soon", included: true, soon: true },
     ],
     cta: "Start Agency",
@@ -234,11 +234,6 @@ export default function PricingPage() {
                   >
                     {plan.cta}
                   </button>
-                  {p.launchBadge && (
-                    <p className="mt-2.5 text-center text-[10px] text-slate-400 font-medium">
-                      Founder pricing · Only available during early access
-                    </p>
-                  )}
                 </div>
               </div>
             );

@@ -120,7 +120,13 @@ export default function ContentStudioPanel({ data, market, tier, analysisId, pla
     const params = analysisId ? `?analysis_id=${analysisId}` : ''
     fetch(`/api/content-generations${params}`)
       .then(r => r.json())
-      .then(d => setUsage(d))
+      .then(d => {
+        setUsage(d)
+        if (d.existing_posts?.length) {
+          setPosts(d.existing_posts)
+          setExpanded(0)
+        }
+      })
       .catch(() => {})
   }, [isPremium, analysisId])
 
@@ -174,7 +180,7 @@ export default function ContentStudioPanel({ data, market, tier, analysisId, pla
           <div>
             <p className="text-sm font-semibold text-slate-800">AI Content Studio</p>
             <p className="text-xs text-slate-400 mt-0.5">
-              5 blog posts tailored to your visibility gaps · Claude-powered
+              5 blog posts tailored to your visibility gaps
             </p>
           </div>
         </div>
@@ -229,7 +235,7 @@ export default function ContentStudioPanel({ data, market, tier, analysisId, pla
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#94a3b8" strokeWidth="1.5"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </div>
           <p className="text-sm font-medium text-slate-500">Ready to generate your content plan</p>
-          <p className="text-xs text-slate-400 max-w-xs">Claude will analyze your visibility gaps and create 5 targeted blog posts to improve how AI models talk about {data.brand}.</p>
+          <p className="text-xs text-slate-400 max-w-xs">We will analyze your visibility gaps and create 5 targeted blog posts to improve how AI models talk about {data.brand}.</p>
         </div>
       )}
 

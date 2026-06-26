@@ -22,18 +22,21 @@ export async function GET(req: Request) {
   const monthStart = new Date()
   monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
 
-  const [{ count }, analysisDone] = await Promise.all([
-    supabase.from('content_plans').select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id).gte('created_at', monthStart.toISOString()),
-    analysisId
-      ? supabase.from('content_plans').select('id', { count: 'exact', head: true }).eq('analysis_id', analysisId).then(r => (r.count ?? 0) > 0)
-      : Promise.resolve(false),
-  ])
-
   const tier = user.tier as keyof typeof TIER_LIMITS
   const limit = TIER_LIMITS[tier]?.content_generations ?? 0
 
-  return NextResponse.json({ count: count ?? 0, limit, analysis_done: analysisDone })
+  const [{ count }, existingPlan] = await Promise.all([
+    supabase.from('content_plans').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id).gte('created_at', monthStart.toISOString()),
+    analysisId
+      ? supabase.from('content_plans').select('posts').eq('analysis_id', analysisId).maybeSingle()
+      : Promise.resolve(null),
+  ])
+
+  const analysisDone = !!existingPlan?.data
+  const existingPosts = existingPlan?.data?.posts ?? null
+
+  return NextResponse.json({ count: count ?? 0, limit, analysis_done: analysisDone, existing_posts: existingPosts })
 }
 
 // POST — generate 5 content pieces for a brand analysis
