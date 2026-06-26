@@ -6,6 +6,7 @@ import BrandForm from "@/components/BrandForm";
 import PromptEditor from "@/components/PromptEditor";
 import Dashboard from "@/components/Dashboard";
 import AppHeader from "@/components/AppHeader";
+import StepIndicator from "@/components/StepIndicator";
 import DemoPreview from "@/components/DemoPreview";
 import { useRouter } from "next/navigation";
 import type { Competitor, AnalyzeResponse, PromptWithTrend } from "@/types";
@@ -175,13 +176,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
-      <AppHeader
-        onLogoClick={reset}
-        steps={steps}
-        currentStepIndex={stepIndex}
-        showStartOver={step !== "form"}
-        onStartOver={reset}
-      />
+      <AppHeader onLogoClick={reset} />
 
       {/* ── FORM STEP ── */}
       {step === "form" && (

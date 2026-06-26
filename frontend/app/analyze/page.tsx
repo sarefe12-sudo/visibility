@@ -7,6 +7,7 @@ import BrandForm from "@/components/BrandForm";
 import PromptEditor from "@/components/PromptEditor";
 import Dashboard from "@/components/Dashboard";
 import AppHeader from "@/components/AppHeader";
+import StepIndicator from "@/components/StepIndicator";
 import type { Competitor, AnalyzeResponse, PromptWithTrend } from "@/types";
 import type { Analysis } from "@/lib/supabase";
 import { TIER_LIMITS } from "@/lib/supabase";
@@ -157,18 +158,18 @@ export default function AnalyzePage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
-      <AppHeader
-        onLogoClick={() => router.push("/")}
-        steps={steps}
-        currentStepIndex={stepKeys.indexOf(step)}
-        showStartOver={step !== "form"}
-        onStartOver={reset}
-      />
+      <AppHeader onLogoClick={() => router.push("/")} />
 
       {/* Form step */}
       {step === "form" && (
         <section className="min-h-screen bg-grid pt-20">
-          <div className="mx-auto max-w-xl px-6 pt-10 pb-20">
+          <StepIndicator
+            steps={steps}
+            currentIndex={stepKeys.indexOf(step)}
+            showStartOver={step !== "form"}
+            onStartOver={reset}
+          />
+          <div className="mx-auto max-w-xl px-6 pt-6 pb-20">
 
             {/* Quota bar */}
             {(() => {
@@ -290,22 +291,28 @@ export default function AnalyzePage() {
 
       {/* Prompts step */}
       {step === "prompts" && !analyzing && (
-        <section className="min-h-screen bg-slate-50 flex items-start justify-center px-4 sm:px-6 pt-24 pb-20">
+        <>
+        <StepIndicator steps={steps} currentIndex={1} showStartOver onStartOver={reset} />
+        <section className="min-h-screen bg-slate-50 flex items-start justify-center px-4 sm:px-6 pt-4 pb-20">
           <div className="w-full max-w-2xl">
             {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
             <PromptEditor prompts={promptsWithTrend} onConfirm={handleAnalyze} analyzing={analyzing} promptLimit={limits.prompts} brand={brand} market={market} />
           </div>
         </section>
+        </>
       )}
 
       {/* Results step */}
       {step === "results" && result && (
-        <section className="bg-slate-50 px-4 sm:px-6 pt-20 sm:pt-24 pb-20">
+        <>
+        <StepIndicator steps={steps} currentIndex={2} showStartOver onStartOver={reset} />
+        <section className="bg-slate-50 px-4 sm:px-6 pt-4 pb-20">
           <div className="mx-auto max-w-5xl">
             {error && <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">{error}</div>}
             <Dashboard data={result} market={market} tier={tier} locked={tier === "free"} previousScore={previousScore} />
           </div>
         </section>
+        </>
       )}
     </main>
   );
