@@ -61,7 +61,7 @@ const PLANS = [
     description: "For brands serious about winning the AI visibility race.",
     features: [
       { text: "10 analyses per month", included: true },
-      { text: "25 prompts · 3 competitors", included: true },
+      { text: "25 prompts · 5 competitors", included: true },
       { text: "All 6 AI models incl. Gemini", included: true },
       { text: "Sentiment analysis", included: true },
       { text: "Monthly AI score alerts", included: true },
