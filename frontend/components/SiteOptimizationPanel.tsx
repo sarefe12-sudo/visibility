@@ -75,6 +75,16 @@ function FreeTeaserCard({ brand }: { brand: string }) {
   )
 }
 
+function isBrandRelated(url: string, brand: string): boolean {
+  try {
+    const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase()
+    const brandWords = brand.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2)
+    return brandWords.some(w => domain.includes(w))
+  } catch {
+    return false
+  }
+}
+
 export default function SiteOptimizationPanel({ brand, websiteHint, tier }: Props) {
   const isPremium = tier === 'pro' || tier === 'agency'
   const [url, setUrl] = useState(websiteHint ?? '')
@@ -82,11 +92,18 @@ export default function SiteOptimizationPanel({ brand, websiteHint, tier }: Prop
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<Analysis | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [brandWarning, setBrandWarning] = useState(false)
 
   if (!isPremium) return <FreeTeaserCard brand={brand} />
 
   async function analyze() {
     if (!url.trim()) return
+
+    if (!isBrandRelated(url.trim(), brand)) {
+      setBrandWarning(true)
+      return
+    }
+    setBrandWarning(false)
     setLoading(true); setError(null); setResult(null)
     try {
       const res = await fetch('/api/site-optimization', {
@@ -139,9 +156,9 @@ export default function SiteOptimizationPanel({ brand, websiteHint, tier }: Prop
         <input
           type="url"
           value={url}
-          onChange={e => setUrl(e.target.value)}
+          onChange={e => { setUrl(e.target.value); setBrandWarning(false) }}
           placeholder={`https://${brand.toLowerCase().replace(/\s+/g, '')}.com`}
-          className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+          className={`flex-1 rounded-xl border px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:border-transparent ${brandWarning ? 'border-amber-400 focus:ring-amber-300' : 'border-slate-200 focus:ring-violet-400'}`}
           onKeyDown={e => e.key === 'Enter' && analyze()}
           disabled={loading}
         />
@@ -156,6 +173,17 @@ export default function SiteOptimizationPanel({ brand, websiteHint, tier }: Prop
           }
         </button>
       </div>
+
+      {/* Brand mismatch warning */}
+      {brandWarning && (
+        <div className="mx-5 my-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
+          <svg className="flex-shrink-0 mt-0.5 h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Bu site <strong>{brand}</strong> markası ile ilişkili görünmüyor.</p>
+            <p className="text-xs text-amber-700 mt-0.5">Yalnızca {brand} markasına ait web siteleri analiz edilebilir. Lütfen {brand}&apos;a ait doğru URL&apos;i girin.</p>
+          </div>
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (

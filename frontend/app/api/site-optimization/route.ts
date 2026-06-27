@@ -26,6 +26,18 @@ export async function POST(req: Request) {
   const { url, brand } = body
   if (!url || !brand) return NextResponse.json({ error: 'Missing url or brand' }, { status: 400 })
 
+  // Validate URL is related to the brand
+  try {
+    const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase()
+    const brandWords = (brand as string).toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter((w: string) => w.length > 2)
+    const isRelated = brandWords.some((w: string) => domain.includes(w))
+    if (!isRelated) {
+      return NextResponse.json({ error: `This site does not appear to be related to the brand "${brand}". Only websites belonging to ${brand} can be analyzed.` }, { status: 400 })
+    }
+  } catch {
+    return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 })
+  }
+
   try {
     const res = await fetch(`${BACKEND}/analyze-site`, {
       method: 'POST',
