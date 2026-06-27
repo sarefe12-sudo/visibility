@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 interface Props { params: Promise<{ slug: string }> }
 

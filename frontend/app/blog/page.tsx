@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
 
-export const revalidate = 3600; // revalidate every hour
+export const revalidate = 300; // revalidate every 5 minutes
 
 export const metadata: Metadata = {
   title: "Blog — AI Brand Visibility & GEO Optimization",
