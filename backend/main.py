@@ -184,14 +184,23 @@ GEMINI_SYSTEM = (
     "List actual company and product names rather than giving generic advice."
 )
 
-async def call_model(model_id: str, prompt: str) -> tuple[str, int, int]:
+async def call_model(model_id: str, prompt: str, brand: str = "") -> tuple[str, int, int]:
     """Call a single model via LiteLLM, return (response_text, prompt_tokens, completion_tokens)."""
     is_gemini = model_id.startswith("gemini/")
     retries = 3 if is_gemini else 1
     messages = [{"role": "user", "content": prompt}]
     kwargs: dict = {"model": model_id, "messages": messages, "max_tokens": 400, "timeout": 45}
     if is_gemini:
-        kwargs["messages"] = [{"role": "system", "content": GEMINI_SYSTEM}, {"role": "user", "content": prompt}]
+        brand_clause = (
+            f" You are evaluating the brand '{brand}'. Always refer to '{brand}' by name in your response."
+            if brand else ""
+        )
+        system = GEMINI_SYSTEM + brand_clause
+        # Also append a hint to the user prompt so Gemini can't ignore the brand
+        user_prompt = prompt
+        if brand:
+            user_prompt = f"{prompt}\n\n(Please mention {brand} specifically by name in your answer.)"
+        kwargs["messages"] = [{"role": "system", "content": system}, {"role": "user", "content": user_prompt}]
     for attempt in range(retries):
         try:
             response = await litellm.acompletion(**kwargs)
@@ -622,7 +631,7 @@ async def analyze(req: AnalyzeRequest):
 
         # Fire all models concurrently for this prompt
         tasks = {
-            label: call_model(model_id, prompt)
+            label: call_model(model_id, prompt, brand=req.brand)
             for label, model_id in active_models.items()
         }
         results = await asyncio.gather(*tasks.values())
