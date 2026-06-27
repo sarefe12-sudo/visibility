@@ -52,8 +52,8 @@ function FreeTeaserCard({ brand }: { brand: string }) {
         </div>
         <div className="relative">
           <div className="space-y-2 blur-sm pointer-events-none select-none" aria-hidden>
-            {['Schema.org markup missing — AI models can't identify your brand type',
-              'Meta description doesn't mention brand name',
+            {['Schema.org markup missing — AI models cannot identify your brand type',
+              'Meta description does not mention brand name',
               'Brand mentioned only 2× on homepage — below recommended threshold'].map((t, i) => (
               <div key={i} className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${i === 0 ? 'border-red-200 bg-red-50' : i === 1 ? 'border-amber-200 bg-amber-50' : 'border-amber-200 bg-amber-50'}`}>
                 <span className="mt-0.5 text-xs font-bold">{i === 0 ? '✗' : '!'}</span>
