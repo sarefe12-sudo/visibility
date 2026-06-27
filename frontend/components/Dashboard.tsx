@@ -10,6 +10,7 @@ import InsightsList from "./InsightsList";
 import PromptsTable from "./PromptsTable";
 import RecommendationsPanel from "./RecommendationsPanel";
 import ContentStudioPanel from "./ContentStudioPanel";
+import SiteOptimizationPanel from "./SiteOptimizationPanel";
 
 interface SavedPlaybook {
   per_model: { model: string; score: number; status: string; headline: string; why: string; actions: string[] }[];
@@ -17,7 +18,7 @@ interface SavedPlaybook {
   generated_at?: string;
 }
 
-interface Props { data: AnalyzeResponse; market?: string; fromHistory?: boolean; locked?: boolean; tier?: "free" | "pro" | "agency"; previousScore?: number; analysisId?: string; savedPlaybook?: SavedPlaybook | null; previousRecommendations?: SavedPlaybook['priority_actions']; }
+interface Props { data: AnalyzeResponse; market?: string; fromHistory?: boolean; locked?: boolean; tier?: "free" | "pro" | "agency"; previousScore?: number; analysisId?: string; savedPlaybook?: SavedPlaybook | null; previousRecommendations?: SavedPlaybook['priority_actions']; website?: string; }
 
 const MARKET_LABELS: Record<string, string> = {
   global: "Global", TR: "Turkey", US: "USA", GB: "UK", DE: "Germany",
@@ -34,7 +35,7 @@ const MODEL_LABELS: Record<string, string> = {
 };
 const COMP_COLORS = ["#10a37f", "#94a3b8", "#f59e0b", "#f43f5e", "#8b5cf6"];
 
-function PremiumDashboard({ data, market = "global", fromHistory = false, locked = false, tier = "pro", previousScore, analysisId, savedPlaybook, previousRecommendations }: Props) {
+function PremiumDashboard({ data, market = "global", fromHistory = false, locked = false, tier = "pro", previousScore, analysisId, savedPlaybook, previousRecommendations, website }: Props) {
   const [animated, setAnimated] = useState(false);
   useEffect(() => { const t = setTimeout(() => setAnimated(true), 100); return () => clearTimeout(t); }, []);
 
@@ -239,6 +240,13 @@ function PremiumDashboard({ data, market = "global", fromHistory = false, locked
         playbook={savedPlaybook}
       />
 
+      {/* Row 5: Site AI Optimization */}
+      <SiteOptimizationPanel
+        brand={data.brand}
+        websiteHint={website}
+        tier={tier}
+      />
+
       {/* Row 5: Key findings */}
       <InsightsList insights={data.insights} />
 
@@ -248,10 +256,10 @@ function PremiumDashboard({ data, market = "global", fromHistory = false, locked
   );
 }
 
-export default function Dashboard({ data, market = "global", fromHistory = false, locked = false, tier = "free", previousScore, analysisId, savedPlaybook, previousRecommendations }: Props) {
+export default function Dashboard({ data, market = "global", fromHistory = false, locked = false, tier = "free", previousScore, analysisId, savedPlaybook, previousRecommendations, website }: Props) {
   // Premium layout for Pro and Agency
   if (tier !== "free") {
-    return <PremiumDashboard data={data} market={market} fromHistory={fromHistory} locked={locked} tier={tier} previousScore={previousScore} analysisId={analysisId} savedPlaybook={savedPlaybook} previousRecommendations={previousRecommendations} />;
+    return <PremiumDashboard data={data} market={market} fromHistory={fromHistory} locked={locked} tier={tier} previousScore={previousScore} analysisId={analysisId} savedPlaybook={savedPlaybook} previousRecommendations={previousRecommendations} website={website} />;
   }
 
   // Legacy layout for free tier (landing page demo — do not touch)

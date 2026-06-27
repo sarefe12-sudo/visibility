@@ -849,3 +849,133 @@ Rules:
 @app.get("/health")
 def health():
     return {"status": "ok", "active_models": list(get_active_models().keys())}
+
+
+# ---------- Site AI Optimization ----------
+
+class SiteAnalysisRequest(BaseModel):
+    url: str
+    brand: str
+
+
+async def fetch_site_data(url: str, brand: str) -> dict:
+    """Fetch URL and extract AI-visibility signals from HTML."""
+    if not url.startswith("http"):
+        url = "https://" + url
+    try:
+        async with httpx.AsyncClient(timeout=12, follow_redirects=True) as client:
+            resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            html = resp.text
+    except Exception as e:
+        return {"error": str(e)}
+
+    # Extract signals with regex (no extra deps)
+    title = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
+    meta_desc = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\'](.*?)["\']', html, re.I)
+    if not meta_desc:
+        meta_desc = re.search(r'<meta[^>]+content=["\'](.*?)["\'][^>]+name=["\']description["\']', html, re.I)
+    h1s = re.findall(r"<h1[^>]*>(.*?)</h1>", html, re.I | re.S)
+    h2s = re.findall(r"<h2[^>]*>(.*?)</h2>", html, re.I | re.S)[:8]
+    schema = re.findall(r'application/ld\+json[^>]*>(.*?)</script>', html, re.I | re.S)
+    og_desc = re.search(r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\'](.*?)["\']', html, re.I)
+    canonical = re.search(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\'](.*?)["\']', html, re.I)
+    robots_meta = re.search(r'<meta[^>]+name=["\']robots["\'][^>]+content=["\'](.*?)["\']', html, re.I)
+
+    # Strip HTML tags from headings
+    def strip_tags(s: str) -> str:
+        return re.sub(r"<[^>]+>", "", s).strip()
+
+    plain_text = re.sub(r"<[^>]+>", " ", html)
+    plain_text = re.sub(r"\s+", " ", plain_text).strip()
+    brand_mentions = len(re.findall(re.escape(brand.lower()), plain_text.lower()))
+    word_count = len(plain_text.split())
+
+    # Check robots.txt and sitemap
+    base = re.match(r"https?://[^/]+", url)
+    base_url = base.group(0) if base else url
+    robots_ok, sitemap_ok = False, False
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            r = await client.get(f"{base_url}/robots.txt")
+            robots_ok = r.status_code == 200
+            s = await client.get(f"{base_url}/sitemap.xml")
+            sitemap_ok = s.status_code == 200
+    except Exception:
+        pass
+
+    return {
+        "url": url,
+        "title": strip_tags(title.group(1)) if title else None,
+        "meta_description": strip_tags(meta_desc.group(1)) if meta_desc else None,
+        "h1s": [strip_tags(h) for h in h1s[:3]],
+        "h2s": [strip_tags(h) for h in h2s],
+        "schema_types": [re.search(r'"@type"\s*:\s*"([^"]+)"', s).group(1) for s in schema if re.search(r'"@type"\s*:\s*"([^"]+)"', s)],
+        "og_description": strip_tags(og_desc.group(1)) if og_desc else None,
+        "canonical": canonical.group(1) if canonical else None,
+        "robots_meta": robots_meta.group(1) if robots_meta else None,
+        "robots_txt": robots_ok,
+        "sitemap_xml": sitemap_ok,
+        "brand_mentions_on_page": brand_mentions,
+        "approx_word_count": word_count,
+    }
+
+
+@app.post("/analyze-site")
+async def analyze_site(req: SiteAnalysisRequest):
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="AI service not configured")
+
+    site_data = await fetch_site_data(req.url, req.brand)
+    if "error" in site_data:
+        raise HTTPException(status_code=422, detail=f"Could not fetch site: {site_data['error']}")
+
+    prompt = f"""You are an AI visibility expert analyzing a website for the brand "{req.brand}".
+Your job is NOT classic SEO — you are checking how well this site helps AI models (ChatGPT, Claude, Gemini, Perplexity) understand, trust, and recommend this brand.
+
+Here is the extracted site data:
+{json.dumps(site_data, indent=2)}
+
+Analyze this data and return a JSON object with:
+{{
+  "overall_score": <integer 0-100 — how AI-ready is this site>,
+  "summary": "<2 sentence overall assessment>",
+  "checks": [
+    {{
+      "id": "<snake_case_id>",
+      "label": "<short check name>",
+      "status": "pass" | "warn" | "fail",
+      "finding": "<what you found, be specific>",
+      "recommendation": "<concrete actionable fix — max 2 sentences>"
+    }}
+  ]
+}}
+
+Cover these checks (in this order):
+1. title_tag — Does title include brand name and describe what it does?
+2. meta_description — Does it exist and mention brand + value proposition?
+3. h1_brand_clarity — Do H1s clearly communicate what the brand does?
+4. schema_markup — Is there Organization, Product, or LocalBusiness schema.org markup?
+5. brand_mention_density — Is brand mentioned enough times on the page? (5+ is good, <3 is bad)
+6. about_signals — Do H2s/content suggest there is an About or Who We Are section?
+7. og_description — Does Open Graph description exist for social/AI sharing previews?
+8. sitemap_xml — Is sitemap.xml accessible?
+9. robots_txt — Is robots.txt accessible and not blocking AI crawlers?
+10. content_depth — Is there enough content for AI to understand what the brand does? (word count context)
+
+Return ONLY the raw JSON. No markdown, no explanation."""
+
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=2000,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    raw = message.content[0].text.strip()
+    try:
+        stripped = raw.replace("```json", "").replace("```", "").strip()
+        result = json.loads(stripped)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse AI output: {e}")
+
+    return {"site_data": site_data, "analysis": result}
