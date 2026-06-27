@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { posts } from "@/lib/posts";
+import { createClient } from "@supabase/supabase-js";
 import AppHeader from "@/components/AppHeader";
 import type { Metadata } from "next";
+
+export const revalidate = 3600; // revalidate every hour
 
 export const metadata: Metadata = {
   title: "Blog — AI Brand Visibility & GEO Optimization",
@@ -15,15 +17,37 @@ const CATEGORY_COLOR: Record<string, string> = {
   Strategy:     "bg-violet-50 text-violet-600",
   Metrics:      "bg-emerald-50 text-emerald-600",
   Reporting:    "bg-amber-50 text-amber-600",
+  Tactics:      "bg-teal-50 text-teal-600",
 };
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
-export default function BlogPage() {
-  const sorted = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const [featured, ...rest] = sorted;
+async function getPosts() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("slug, title, description, date, read_time, category")
+    .eq("published", true)
+    .order("date", { ascending: false })
+    .limit(50);
+  return data ?? [];
+}
+
+export default async function BlogPage() {
+  const posts = await getPosts();
+  if (posts.length === 0) return (
+    <main className="min-h-screen bg-white text-slate-900">
+      <AppHeader />
+      <div className="pt-40 text-center text-slate-400">No posts yet.</div>
+    </main>
+  );
+
+  const [featured, ...rest] = posts;
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -56,7 +80,7 @@ export default function BlogPage() {
                   {featured.category}
                 </span>
                 <span className="text-xs text-slate-400">{formatDate(featured.date)}</span>
-                <span className="text-xs text-slate-400">· {featured.readTime} min read</span>
+                <span className="text-xs text-slate-400">· {featured.read_time} min read</span>
               </div>
               <h2 className="text-2xl font-extrabold text-slate-900 mb-3 group-hover:text-indigo-700 transition-colors leading-tight">
                 {featured.title}
@@ -77,7 +101,7 @@ export default function BlogPage() {
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${CATEGORY_COLOR[post.category] ?? "bg-slate-50 text-slate-500"}`}>
                       {post.category}
                     </span>
-                    <span className="text-xs text-slate-400">{post.readTime} min</span>
+                    <span className="text-xs text-slate-400">{post.read_time} min</span>
                   </div>
                   <h2 className="text-base font-bold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors leading-snug flex-1">
                     {post.title}

@@ -41,6 +41,7 @@ export default function Home() {
 
   const [step, setStep] = useState<Step>("form");
   const [brand, setBrand] = useState("");
+  const [website, setWebsite] = useState("");
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [promptsWithTrend, setPromptsWithTrend] = useState<PromptWithTrend[]>([]);
   const [approvedPrompts, setApprovedPrompts] = useState<string[]>([]);
@@ -91,6 +92,7 @@ export default function Home() {
       return;
     }
     setMarket(selectedMarket);
+    setWebsite(website);
     setGeneratingPrompts(true); setError(null); setBrand(b); setCompetitors(comps);
     try {
       const res = await fetch("https://zealous-perception-production-2d31.up.railway.app/generate-prompts", {
@@ -546,7 +548,7 @@ export default function Home() {
               </a>
             </div>
 
-            <Dashboard data={result} market={market} locked={!isSignedIn} tier="free" />
+            <Dashboard data={result} market={market} locked={!isSignedIn} tier="free" website={website} />
 
             {/* Bottom CTA */}
             <div className="mt-10 rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-sm">
