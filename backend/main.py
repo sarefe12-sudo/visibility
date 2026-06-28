@@ -895,10 +895,10 @@ async def fetch_site_data(url: str, brand: str) -> dict:
     base_url = base.group(0) if base else url
     robots_ok, sitemap_ok = False, False
     try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            r = await client.get(f"{base_url}/robots.txt")
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            r = await client.get(f"{base_url}/robots.txt", headers={"User-Agent": "Mozilla/5.0"})
             robots_ok = r.status_code == 200
-            s = await client.get(f"{base_url}/sitemap.xml")
+            s = await client.get(f"{base_url}/sitemap.xml", headers={"User-Agent": "Mozilla/5.0"})
             sitemap_ok = s.status_code == 200
     except Exception:
         pass
