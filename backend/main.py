@@ -979,3 +979,111 @@ Return ONLY the raw JSON. No markdown, no explanation."""
         raise HTTPException(status_code=500, detail=f"Failed to parse AI output: {e}")
 
     return {"site_data": site_data, "analysis": result}
+
+
+# ---------- Lite Analyze (for outreach automation) ----------
+
+class AnalyzeLiteRequest(BaseModel):
+    brand: str
+    industry: Optional[str] = None
+
+
+class AnalyzeLiteResponse(BaseModel):
+    brand: str
+    overall_score: float
+    model_scores: dict[str, float]
+    top_competitor: Optional[str] = None
+    top_competitor_score: Optional[float] = None
+    visibility_label: str  # "strong" | "moderate" | "low" | "invisible"
+    summary: str           # 1 sentence for outreach message
+
+
+LITE_PROMPTS = [
+    "What are the best {industry} companies people talk about online? List the top brands.",
+    "If someone asks AI about {industry} solutions, which brands typically come up?",
+    "Who are the market leaders in {industry} that AI models most commonly recommend?",
+]
+
+LITE_MODELS = ["claude", "gpt4o"]  # Fast, reliable, 2 models only
+
+
+@app.post("/analyze-lite", response_model=AnalyzeLiteResponse)
+async def analyze_lite(req: AnalyzeLiteRequest):
+    """
+    Fast brand visibility check for outreach automation.
+    Uses 3 prompts × 2 models = 6 calls. Returns score + summary sentence.
+    """
+    active = get_active_models()
+    models_to_use = {k: v for k, v in active.items() if k in LITE_MODELS}
+    if not models_to_use:
+        # fallback to whatever is available
+        models_to_use = dict(list(active.items())[:2])
+
+    industry = req.industry or "software and SaaS"
+    prompts = [p.format(industry=industry) for p in LITE_PROMPTS]
+
+    # Fan out: 3 prompts × N models
+    tasks = []
+    for prompt in prompts:
+        for model_label, model_id in models_to_use.items():
+            tasks.append((prompt, model_label, model_id))
+
+    results: dict[str, list[tuple[int, str]]] = {m: [] for m in models_to_use}
+
+    async def run_one(prompt: str, label: str, model_id: str):
+        text, _, _ = await call_model(model_id, prompt, req.brand)
+        mentions = count_mentions(text, req.brand)
+        results[label].append((mentions, text))
+
+    await asyncio.gather(*[run_one(p, l, m) for p, l, m in tasks])
+
+    # Score each model: avg mentions per prompt → normalize to 0-100
+    model_scores: dict[str, float] = {}
+    for label, data in results.items():
+        if not data:
+            model_scores[label] = 0.0
+            continue
+        avg_mentions = sum(m for m, _ in data) / len(data)
+        # Cap at 3 mentions per prompt = 100 score
+        model_scores[label] = min(100.0, round(avg_mentions / 3 * 100, 1))
+
+    overall = round(sum(model_scores.values()) / max(len(model_scores), 1), 1)
+
+    if overall >= 60:
+        label = "strong"
+    elif overall >= 30:
+        label = "moderate"
+    elif overall > 0:
+        label = "low"
+    else:
+        label = "invisible"
+
+    # Generate a 1-sentence summary for outreach
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    summary = f"{req.brand} scores {overall}/100 for AI visibility in {industry}."
+    if api_key:
+        try:
+            client = anthropic.Anthropic(api_key=api_key)
+            score_context = ", ".join(f"{k}: {v}/100" for k, v in model_scores.items())
+            msg = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=80,
+                messages=[{"role": "user", "content":
+                    f"Write ONE punchy sentence (max 20 words) describing the AI visibility of brand '{req.brand}' "
+                    f"in the {industry} industry. Scores: {score_context}. "
+                    f"Be specific and honest. No fluff. Example: 'Acme scores 23/100 — barely visible on ChatGPT, absent on Claude.'"
+                }]
+            )
+            summary = msg.content[0].text.strip().strip('"')
+        except Exception:
+            pass
+
+    return AnalyzeLiteResponse(
+        brand=req.brand,
+        overall_score=overall,
+        model_scores=model_scores,
+        top_competitor=None,
+        top_competitor_score=None,
+        visibility_label=label,
+        summary=summary,
+    )
