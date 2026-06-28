@@ -155,7 +155,7 @@ export default function RecommendationsPanel({ data, market = "global", historyM
           <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 animate-spin" />
         </div>
         <p className="text-sm font-semibold text-slate-700">Generating your AI strategy playbook…</p>
-        <p className="text-xs text-slate-400">Claude is analyzing each model's behaviour for {data.brand}</p>
+        <p className="text-xs text-slate-400">We are analyzing each model&apos;s behaviour for {data.brand}</p>
         <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1">
           <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
           <span className="text-[10px] font-bold text-violet-600 uppercase tracking-wide">Real-time · Powered by Claude</span>
