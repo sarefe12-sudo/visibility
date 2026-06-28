@@ -35,6 +35,9 @@ export default function AppHeader({ onLogoClick }: Props) {
             <Link href="/about" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
               About
             </Link>
+            <Link href="/product" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
+              Product
+            </Link>
             <Link href="/blog" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
               Blog
             </Link>

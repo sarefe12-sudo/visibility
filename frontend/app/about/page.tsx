@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AppHeader from "@/components/AppHeader";
 
 export const metadata: Metadata = {
   title: "About VisibilityRadar — AI Visibility Intelligence",
@@ -9,8 +10,9 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white">
+      <AppHeader />
       {/* Hero */}
-      <section className="bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-800 text-white py-24 px-6">
+      <section className="bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-800 text-white pt-36 pb-24 px-6">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-indigo-300 text-sm font-semibold uppercase tracking-widest mb-4">About Us</p>
           <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-6">
