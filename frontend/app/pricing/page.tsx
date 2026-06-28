@@ -80,13 +80,13 @@ const PLANS = [
     tier: "agency",
     color: "border-slate-800",
     badge: "White-Label",
-    description: "For agencies managing multiple brands — with your logo, your domain.",
+    description: "Run AI visibility for up to 10 client brands — under your logo, your domain, your brand.",
     features: [
       { text: "Unlimited analyses", included: true },
       { text: "50 prompts · 10 competitors", included: true },
       { text: "All 6 AI models incl. Gemini + sentiment", included: true },
       { text: "Monthly AI score alerts", included: true },
-      { text: "White-label client portal", included: true },
+      { text: "White-label client portal — up to 10 brands", included: true },
       { text: "PDF reports for all clients", included: true },
       { text: "AI Content Studio — unlimited blog plans", included: true },
       { text: "API access — coming soon", included: true, soon: true },
@@ -277,13 +277,13 @@ export default function PricingPage() {
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-700 text-xl">🏢</div>
               <div>
-                <p className="text-sm font-bold text-white mb-1.5">White-Label Client Portal</p>
+                <p className="text-sm font-bold text-white mb-1.5">White-Label Client Portal — Manage Up to 10 Brands</p>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Give your clients a branded experience — your logo, your domain, your colors.
-                  Each client gets their own login to run queries, view their AI score, and receive
-                  monthly reports. They see your brand. You control everything behind the scenes.
+                  Offer AI visibility as a premium service under your own brand. Each of your clients gets
+                  a fully branded dashboard — your logo, your domain, your colors — to track their scores,
+                  access reports, and follow their AI strategy. They see your agency. You stay in control.
                 </p>
-                <p className="text-xs text-slate-400 mt-3 font-semibold">✓ Agency plan only · up to 10 client brands · 999 analyses/mo</p>
+                <p className="text-xs text-slate-400 mt-3 font-semibold">✓ Agency plan only · starting at $599/mo · up to 10 client brands</p>
               </div>
             </div>
           </div>
