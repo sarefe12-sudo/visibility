@@ -2,6 +2,7 @@
 
 import { Show, SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface Props {
   onLogoClick?: () => void;
@@ -9,6 +10,23 @@ interface Props {
 
 export default function AppHeader({ onLogoClick }: Props) {
   const { isSignedIn, isLoaded } = useUser();
+  const pathname = usePathname();
+
+  const navLink = (href: string, label: string) => {
+    const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+    return (
+      <Link
+        href={href}
+        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+          isActive
+            ? "bg-indigo-50 text-indigo-600 font-semibold"
+            : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+        }`}
+      >
+        {label}
+      </Link>
+    );
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-3.5">
@@ -32,31 +50,17 @@ export default function AppHeader({ onLogoClick }: Props) {
 
           {/* Nav links */}
           <nav className="hidden sm:flex items-center gap-1">
-            <Link href="/about" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
-              About
-            </Link>
-            <Link href="/product" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
-              Product
-            </Link>
-            <Link href="/blog" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
-              Blog
-            </Link>
-            <Link href="/pricing" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
-              Pricing
-            </Link>
+            {navLink("/about", "About")}
+            {navLink("/product", "Product")}
+            {navLink("/blog", "Blog")}
+            {navLink("/pricing", "Pricing")}
             {isLoaded && isSignedIn && (
               <>
-                <Link href="/analyze" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-all">
-                  Analyze
-                </Link>
-                <Link href="/dashboard" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
-                  Dashboard
-                </Link>
+                {navLink("/analyze", "Analyze")}
+                {navLink("/dashboard", "Dashboard")}
               </>
             )}
-            <Link href="/contact" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
-              Contact
-            </Link>
+            {navLink("/contact", "Contact")}
           </nav>
 
           {/* Auth */}
