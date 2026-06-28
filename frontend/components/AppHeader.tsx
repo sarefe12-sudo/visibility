@@ -32,14 +32,14 @@ export default function AppHeader({ onLogoClick }: Props) {
 
           {/* Nav links */}
           <nav className="hidden sm:flex items-center gap-1">
+            <Link href="/about" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
+              About
+            </Link>
             <Link href="/blog" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
               Blog
             </Link>
             <Link href="/pricing" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
               Pricing
-            </Link>
-            <Link href="/about" className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
-              About
             </Link>
             {isLoaded && isSignedIn && (
               <>
