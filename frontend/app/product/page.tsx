@@ -189,16 +189,19 @@ export default function ProductPage() {
             Everything You Need to Win<br />
             <span className="text-indigo-400">AI Search</span>
           </h1>
-          <p className="text-indigo-200 text-xl leading-relaxed max-w-2xl mx-auto mb-10">
+          <p className="text-indigo-200 text-xl leading-relaxed max-w-2xl mx-auto mb-12">
             One platform. Six AI models. Full visibility into how ChatGPT, Claude, Gemini, Perplexity, Grok, and DeepSeek talk about your brand — and exactly what to do about it.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/" className="rounded-xl bg-indigo-500 hover:bg-indigo-400 px-8 py-4 text-sm font-bold text-white transition-colors">
-              Analyze Your Brand Free →
-            </Link>
-            <Link href="/pricing" className="rounded-xl border border-indigo-500/40 bg-white/5 hover:bg-white/10 px-8 py-4 text-sm font-bold text-indigo-200 transition-colors">
-              See Pricing
-            </Link>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-xs font-semibold text-indigo-400 uppercase tracking-widest">Scroll to explore</span>
+            <div className="flex flex-col items-center gap-1 animate-bounce">
+              <svg className="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+              <svg className="h-5 w-5 text-indigo-600/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
         </div>
       </section>
@@ -339,14 +342,25 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-gradient-to-br from-indigo-950 to-indigo-900 text-white py-20 px-6 text-center">
-        <div className="mx-auto max-w-xl">
-          <h2 className="text-3xl font-extrabold mb-4">Start with a Free Analysis</h2>
-          <p className="text-indigo-300 mb-8">No credit card. No setup. See your AI visibility score in 2 minutes.</p>
-          <Link href="/" className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 px-10 py-4 text-sm font-bold text-white transition-colors">
-            Analyze Your Brand Free →
-          </Link>
+      {/* Final CTA */}
+      <section className="bg-gradient-to-br from-indigo-950 via-indigo-900 to-slate-900 text-white py-24 px-6 text-center">
+        <div className="mx-auto max-w-2xl">
+          <span className="inline-block rounded-full bg-indigo-800 px-3 py-1 text-xs font-bold text-indigo-300 mb-6">You made it to the end 👏</span>
+          <h2 className="text-4xl font-extrabold mb-4 leading-tight">
+            Ready to See Where Your<br />Brand Stands in AI?
+          </h2>
+          <p className="text-indigo-300 text-lg mb-10 max-w-lg mx-auto">
+            Run your first analysis free — no credit card, no setup. See your score across ChatGPT, Claude, and more in under 2 minutes.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/" className="rounded-xl bg-white text-indigo-900 hover:bg-indigo-50 px-10 py-4 text-sm font-black transition-colors">
+              Analyze Your Brand Free →
+            </Link>
+            <Link href="/pricing" className="rounded-xl border border-indigo-500/40 bg-white/5 hover:bg-white/10 px-10 py-4 text-sm font-bold text-indigo-200 transition-colors">
+              See Pricing
+            </Link>
+          </div>
+          <p className="mt-6 text-xs text-indigo-500">No credit card · 2-minute setup · Real results from 6 AI models</p>
         </div>
       </section>
     </main>
