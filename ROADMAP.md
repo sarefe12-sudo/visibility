@@ -24,8 +24,10 @@
 | 1 | Pro/Agency kullanıcılar için otomatik blog post üretimi (monthly) | Q3 2026 |
 | 2 | API access (read analyses, scores) | Q3 2026 |
 | 3 | Gemini scoring reliability — upgrade to paid API tier | Q3 2026 |
-| 4 | Slack / webhook alerts for score drops | Q4 2026 |
-| 5 | Custom prompt sets per industry | Q4 2026 |
+| 4 | LinkedIn outreach automation — Google Workspace kurulumu (efe@visibilityradar.ai), Phantombuster + Lemlist entegrasyonu | Q3 2026 |
+| 5 | Content Studio API — generated content exportable via API | Q3 2026 |
+| 6 | Slack / webhook alerts for score drops | Q4 2026 |
+| 7 | Custom prompt sets per industry | Q4 2026 |
 
 ---
 

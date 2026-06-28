@@ -189,9 +189,9 @@ async def process_leads(input_path: str, output_path: str):
         # Normalize column names (Apollo uses various formats)
         first_name = lead.get("First Name") or lead.get("first_name") or ""
         last_name  = lead.get("Last Name")  or lead.get("last_name")  or ""
-        company    = lead.get("Company")    or lead.get("company")    or ""
+        company    = lead.get("Company Name") or lead.get("Company") or lead.get("company") or ""
         title      = lead.get("Title")      or lead.get("title")      or ""
-        linkedin   = lead.get("LinkedIn Url") or lead.get("linkedin_url") or ""
+        linkedin   = lead.get("Person Linkedin Url") or lead.get("LinkedIn Url") or lead.get("linkedin_url") or ""
         email      = lead.get("Email")      or lead.get("email")      or ""
         industry   = lead.get("Industry")   or lead.get("industry")   or ""
 
