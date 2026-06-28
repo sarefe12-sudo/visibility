@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import type { AnalyzeResponse } from "@/types";
 import ModelScoresCard from "./ModelScoresCard";
 import MetricsStrip from "./MetricsStrip";
@@ -256,55 +256,231 @@ function PremiumDashboard({ data, market = "global", fromHistory = false, locked
   );
 }
 
+// ── Lock overlay for blurred sections ────────────────────────────────────────
+function LockedSection({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return (
+    <div className="relative rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="pointer-events-none select-none blur-sm opacity-60 p-5">
+        {children}
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-[2px]">
+        <div className="text-center px-6">
+          <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+            <svg className="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <p className="text-sm font-bold text-slate-800 mb-1">{title}</p>
+          <p className="text-xs text-slate-500 mb-4 max-w-xs">{description}</p>
+          <a href="/pricing" className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white transition-colors">
+            Unlock with Pro · $49/mo
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard({ data, market = "global", fromHistory = false, locked = false, tier = "free", previousScore, analysisId, savedPlaybook, previousRecommendations, website }: Props) {
   // Premium layout for Pro and Agency
   if (tier !== "free") {
     return <PremiumDashboard data={data} market={market} fromHistory={fromHistory} locked={locked} tier={tier} previousScore={previousScore} analysisId={analysisId} savedPlaybook={savedPlaybook} previousRecommendations={previousRecommendations} website={website} />;
   }
 
-  // Legacy layout for free tier (landing page demo — do not touch)
+  // ── Free tier — sales-optimized layout ────────────────────────────────────
+  const [animated, setAnimated] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setAnimated(true), 100); return () => clearTimeout(t); }, []);
+
+  const sc = data.overall_score;
+  const ALL_MODELS = ["claude", "gpt4o", "gemini", "perplexity", "grok", "deepseek"];
+  const testedModels = data.active_models;
+  const missingCount = ALL_MODELS.length - testedModels.length;
   const hasCompetitors = Object.keys(data.competitor_scores).length > 0;
-  const competitorOverallScores = Object.fromEntries(
-    Object.entries(data.competitor_scores).map(([name, s]) => [name, s.overall])
-  );
-  const marketLabel = MARKET_LABELS[market] ?? market.toUpperCase();
-  const scoreColor = data.overall_score >= 60 ? "text-emerald-600" : data.overall_score >= 30 ? "text-amber-500" : "text-red-500";
+
+  const competitorEntries = Object.entries(data.competitor_scores).map(([name, s]) => ({ name, score: s.overall }));
+  const topComp = competitorEntries[0];
+  const gap = topComp && topComp.score > sc ? Math.round(topComp.score - sc) : null;
+
+  const urgencyColor = sc >= 60 ? "from-emerald-600 to-teal-600" : sc >= 30 ? "from-amber-500 to-orange-600" : "from-red-600 to-rose-600";
+  const urgencyLabel = sc >= 60 ? "You have a solid AI presence — but gaps remain." : sc >= 30 ? "Your brand is partially visible — competitors are pulling ahead." : "Your brand is nearly invisible to AI models.";
+
+  const summary = data.sentiment_summary;
+  const sentimentTotal = summary.positive + summary.neutral + summary.negative;
 
   return (
-    <div className="space-y-5">
-      <RecommendationsPanel data={data} market={market} historyMode={fromHistory} locked={locked} tier={tier} />
-      <MetricsStrip data={data} />
-      <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              {fromHistory ? "Analysis Report" : "Analysis Complete"}
-            </span>
+    <div className="space-y-4 pb-24">
+
+      {/* ── 1. Score banner ── */}
+      <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${urgencyColor} text-white p-6`}>
+        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">AI Visibility Score</p>
+            <div className="flex items-end gap-2 mb-2">
+              <span className="text-7xl font-black leading-none tabular-nums">{sc.toFixed(0)}</span>
+              <span className="text-2xl text-white/50 mb-1">/100</span>
+            </div>
+            <p className="text-sm font-semibold text-white/80">{urgencyLabel}</p>
           </div>
-          <h2 className="text-xl font-extrabold text-slate-900 truncate">{data.brand}</h2>
-          <p className="text-xs text-slate-400 mt-0.5">{data.active_models.length} AI models · {marketLabel} market</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">AI Visibility Score</p>
-            <p className={`text-3xl font-black tabular-nums leading-tight ${scoreColor}`}>
-              {data.overall_score.toFixed(0)}<span className="text-base font-normal text-slate-300">/100</span>
-            </p>
+          <div className="sm:ml-auto flex flex-col gap-2 sm:text-right">
+            <div className="rounded-xl bg-white/15 border border-white/20 px-4 py-3">
+              <p className="text-xs font-bold text-white/70 mb-0.5">Tested on</p>
+              <p className="text-sm font-black">{testedModels.length} of 6 AI models</p>
+            </div>
+            {gap && (
+              <div className="rounded-xl bg-black/20 border border-white/10 px-4 py-3">
+                <p className="text-xs font-bold text-white/70 mb-0.5">Competitor gap</p>
+                <p className="text-sm font-black text-red-200">{topComp.name} is +{gap} pts ahead</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
-      {hasCompetitors && <CompetitorTable data={data} />}
-      <ModelScoresCard modelScores={data.model_scores} overallScore={data.overall_score} />
-      {hasCompetitors && (
-        <VisibilityChart
-          brand={data.brand}
-          brandScore={data.overall_score}
-          competitorScores={competitorOverallScores}
-        />
+
+      {/* ── 2. All 6 model scores — 2 real, rest locked ── */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">AI Model Scores</p>
+          <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">{testedModels.length}/6 models tested · Upgrade to test all</span>
+        </div>
+        <div className="space-y-3">
+          {ALL_MODELS.map((key, i) => {
+            const score = data.model_scores[key];
+            const isTested = testedModels.includes(key);
+            const label = MODEL_LABELS[key] ?? key;
+            const color = MODEL_COLORS[key] ?? "#94a3b8";
+            return (
+              <div key={key} className={`flex items-center gap-3 ${!isTested ? "opacity-50" : ""}`}>
+                <div className="flex items-center gap-2 w-24 flex-shrink-0">
+                  {!isTested && <svg className="h-3 w-3 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>}
+                  <span className="text-xs font-bold text-slate-600">{label}</span>
+                </div>
+                <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                  {isTested ? (
+                    <div className="h-full rounded-full transition-all duration-1000" style={{ width: animated ? `${score}%` : "0%", backgroundColor: color, transitionDelay: `${i * 100}ms` }} />
+                  ) : (
+                    <div className="h-full rounded-full bg-slate-200 animate-pulse" style={{ width: "60%" }} />
+                  )}
+                </div>
+                {isTested ? (
+                  <span className="text-sm font-black text-slate-700 w-7 text-right tabular-nums">{score.toFixed(0)}</span>
+                ) : (
+                  <span className="text-xs font-bold text-slate-300 w-7 text-right">—</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-4 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-indigo-700 font-medium">Upgrade to test all 6 models — Gemini, Perplexity, Grok & DeepSeek scores unlocked.</p>
+          <a href="/pricing" className="flex-shrink-0 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-xs font-bold text-white transition-colors">Upgrade →</a>
+        </div>
+      </div>
+
+      {/* ── 3. Playbook (RecommendationsPanel handles free preview internally) ── */}
+      <RecommendationsPanel data={data} market={market} historyMode={fromHistory} locked={locked} tier={tier} />
+
+      {/* ── 4. Competitor section ── */}
+      {hasCompetitors ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Competitor Analysis</p>
+          <div className="space-y-2.5 mb-4">
+            {([{ name: data.brand, score: sc, you: true as const }, ...competitorEntries.slice(0, 2).map(c => ({ ...c, you: false as const }))]).map((b, i) => (
+              <div key={b.name} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${b.you ? "bg-indigo-50 border border-indigo-100" : "bg-slate-50"}`}>
+                <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0" style={{ backgroundColor: b.you ? "#6366f1" : COMP_COLORS[i] ?? "#94a3b8" }}>
+                  {b.name[0].toUpperCase()}
+                </div>
+                <span className={`text-xs font-bold flex-1 truncate ${b.you ? "text-indigo-700" : "text-slate-600"}`}>{b.name}{b.you ? " (YOU)" : ""}</span>
+                <div className="w-24 h-2 rounded-full bg-slate-200 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: animated ? `${b.score}%` : "0%", backgroundColor: b.you ? "#6366f1" : COMP_COLORS[i] ?? "#94a3b8" }} />
+                </div>
+                <span className={`text-sm font-black w-7 text-right ${b.you ? "text-indigo-600" : "text-slate-400"}`}>{b.score.toFixed(0)}</span>
+              </div>
+            ))}
+            {competitorEntries.length > 2 && (
+              <LockedSection title="More competitors hidden" description="Upgrade to see all competitor breakdowns per model.">
+                <div className="space-y-2">
+                  {competitorEntries.slice(2).map((c) => (
+                    <div key={c.name} className="flex items-center gap-3 rounded-xl px-3 py-2.5 bg-slate-50">
+                      <div className="h-7 w-7 rounded-lg bg-slate-300 flex-shrink-0" />
+                      <span className="text-xs font-bold text-slate-600 flex-1">{c.name}</span>
+                      <span className="text-sm font-black text-slate-400">{c.score.toFixed(0)}</span>
+                    </div>
+                  ))}
+                </div>
+              </LockedSection>
+            )}
+          </div>
+          {gap && (
+            <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 flex items-center gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <p className="text-xs text-amber-700 font-semibold">{topComp.name} is {gap} points ahead — upgrade to see the per-model breakdown and fix it.</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <LockedSection title="Competitor Analysis" description="See how you stack up against your top 5 competitors across all 6 AI models.">
+          <div className="p-5 space-y-2">
+            {["Competitor A", "Competitor B", "Competitor C"].map((n, i) => (
+              <div key={n} className="flex items-center gap-3 rounded-xl px-3 py-2.5 bg-slate-50">
+                <div className="h-7 w-7 rounded-lg bg-slate-300 flex-shrink-0" />
+                <span className="text-xs font-bold text-slate-600 flex-1">{n}</span>
+                <div className="w-24 h-2 rounded-full bg-slate-200" />
+                <span className="text-sm font-black text-slate-400">{[71, 45, 28][i]}</span>
+              </div>
+            ))}
+          </div>
+        </LockedSection>
       )}
-      <InsightsList insights={data.insights} />
-      <PromptsTable brand={data.brand} results={data.raw_results} activeModels={data.active_models} />
+
+      {/* ── 5. Sentiment — locked ── */}
+      <LockedSection title="Brand Sentiment Analysis" description="Find out whether AI models describe your brand positively, neutrally, or negatively — and in how many responses.">
+        <div className="p-5 space-y-3">
+          {[{ label: "Positive", pct: 58, color: "bg-emerald-400" }, { label: "Neutral", pct: 31, color: "bg-slate-300" }, { label: "Negative", pct: 11, color: "bg-red-400" }].map((s) => (
+            <div key={s.label}>
+              <div className="flex justify-between text-xs mb-1"><span className="font-semibold text-slate-600">{s.label}</span><span className="font-bold text-slate-500">{s.pct}%</span></div>
+              <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full rounded-full ${s.color}`} style={{ width: `${s.pct}%` }} /></div>
+            </div>
+          ))}
+        </div>
+      </LockedSection>
+
+      {/* ── 6. Content Studio — locked ── */}
+      <LockedSection title="AI Content Studio" description="Generate 5 AI-optimized blog posts targeting your specific visibility gaps. Built to get cited by ChatGPT, Claude, and Gemini.">
+        <div className="p-5 space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">5 articles ready to generate</p>
+          {["Why AI Models Recommend {Brand}: A 2025 Guide", "How to Improve Your AI Visibility Score", "AI Share of Voice: What It Is and Why It Matters"].map((t) => (
+            <div key={t} className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-700">{t.replace("{Brand}", data.brand)}</span>
+              <span className="text-[10px] font-bold text-indigo-400 bg-indigo-50 px-2 py-0.5 rounded-full ml-2 flex-shrink-0">Generate</span>
+            </div>
+          ))}
+        </div>
+      </LockedSection>
+
+      {/* ── 7. Site Audit — locked ── */}
+      <LockedSection title="AI-Readiness Site Audit" description="We scan your website across 10 AI signals and tell you exactly what to fix to improve how AI models read and trust your brand.">
+        <div className="p-5 space-y-2">
+          {["Structured Data (Schema.org)", "Content Depth", "Brand Consistency", "AI Meta Signals", "Sitemap XML"].map((item, i) => (
+            <div key={item} className="flex items-center gap-3">
+              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${[true, false, false, false, true][i] ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500"}`}>{[true, false, false, false, true][i] ? "✓" : "✗"}</span>
+              <span className="text-xs text-slate-600 flex-1">{item}</span>
+              <span className={`text-xs font-bold ${[true, false, false, false, true][i] ? "text-emerald-600" : "text-red-500"}`}>{[90, 40, 35, 25, 100][i]}/100</span>
+            </div>
+          ))}
+        </div>
+      </LockedSection>
+
+      {/* ── Sticky upgrade bar ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-indigo-100 bg-white/95 backdrop-blur-sm px-4 py-3">
+        <div className="mx-auto max-w-2xl flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold text-slate-800">You are on the Free plan</p>
+            <p className="text-[11px] text-slate-500">Unlock all 6 models, full playbook, competitor analysis, content studio & more.</p>
+          </div>
+          <a href="/pricing" className="flex-shrink-0 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white transition-colors whitespace-nowrap">
+            Upgrade to Pro →
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
