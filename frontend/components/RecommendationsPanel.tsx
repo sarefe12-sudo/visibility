@@ -96,7 +96,6 @@ export default function RecommendationsPanel({ data, market = "global", historyM
   useEffect(() => {
     if (autoFired.current) return;
     if (historyMode && savedPlaybook) return; // already have it from DB
-    if (historyMode && !savedPlaybook) return; // old analysis, no playbook — skip
     autoFired.current = true;
     generate();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -168,33 +167,6 @@ export default function RecommendationsPanel({ data, market = "global", historyM
   if (!playbook) {
     if (error) return (
       <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">{error}</div>
-    );
-    if (historyMode) return (
-      <div className="rounded-2xl border border-slate-200 bg-white px-5 py-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-center sm:text-left">
-            <p className="text-sm font-semibold text-slate-500 mb-1">Strategy playbook not available for past analyses</p>
-            <p className="text-xs text-slate-400">Run a new analysis to get an up-to-date AI strategy playbook for {data.brand}.</p>
-          </div>
-          {isPremium && (
-            <button
-              onClick={() => downloadPdf(data, market, [], [], setExporting)}
-              disabled={exporting}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-40"
-            >
-              {exporting
-                ? <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                : <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>}
-              <span className="flex flex-col items-start leading-tight">
-                <span>Download Report PDF</span>
-                <span className="text-[9px] font-normal text-slate-400">
-                  {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-              </span>
-            </button>
-          )}
-        </div>
-      </div>
     );
     return null;
   }
