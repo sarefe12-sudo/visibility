@@ -282,7 +282,7 @@ export default function Home() {
             <div className="rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-600 to-indigo-600 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <p className="text-base font-extrabold text-white mb-1">Get your model-by-model playbook — in real time</p>
-                <p className="text-sm text-violet-200">Run one analysis. Claude reads your scores and instantly generates a custom strategy for each AI model.</p>
+                <p className="text-sm text-violet-200">Run one analysis. We read your scores and instantly generate a custom strategy for each AI model.</p>
               </div>
               <button
                 onClick={() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
