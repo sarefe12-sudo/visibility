@@ -8,9 +8,15 @@ import PromptEditor from "@/components/PromptEditor";
 import Dashboard from "@/components/Dashboard";
 import AppHeader from "@/components/AppHeader";
 import StepIndicator from "@/components/StepIndicator";
+import ShareModal from "@/components/ShareModal";
 import type { Competitor, AnalyzeResponse, PromptWithTrend } from "@/types";
 import type { Analysis } from "@/lib/supabase";
 import { TIER_LIMITS } from "@/lib/supabase";
+
+const MODEL_COLORS: Record<string, string> = {
+  claude: "#d97757", gpt4o: "#10a37f", gemini: "#4285f4",
+  perplexity: "#20b2aa", grok: "#a78bfa", deepseek: "#4d6bfe",
+};
 
 type Step = "form" | "prompts" | "results";
 
@@ -34,6 +40,7 @@ export default function AnalyzePage() {
   const [previousScore, setPreviousScore] = useState<number | undefined>(undefined);
   const [currentAnalysisId, setCurrentAnalysisId] = useState<string | undefined>(undefined);
   const [previousRecommendations, setPreviousRecommendations] = useState<{ title: string; priority: string; category: string; description: string; actions: string[] }[]>([]);
+  const [shareTarget, setShareTarget] = useState<{ id: string; brand: string; score: number; market: string } | null>(null);
 
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -169,6 +176,15 @@ export default function AnalyzePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
       <AppHeader onLogoClick={() => router.push("/")} />
+      {shareTarget && (
+        <ShareModal
+          analysisId={shareTarget.id}
+          brand={shareTarget.brand}
+          score={shareTarget.score}
+          market={shareTarget.market}
+          onClose={() => setShareTarget(null)}
+        />
+      )}
 
       {/* Form step */}
       {step === "form" && (
@@ -247,6 +263,95 @@ export default function AnalyzePage() {
             ) : (
               <div ref={formRef}>
                 <BrandForm onGenerate={handleGenerate} loading={generatingPrompts} maxCompetitors={limits.competitors} />
+              </div>
+            )}
+
+            {/* Past analyses */}
+            {pastAnalyses.length > 0 && (
+              <div className="mt-10">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                  Recent analyses
+                </p>
+                <div className="space-y-2">
+                  {pastAnalyses.slice(0, 5).map((a) => {
+                    const score = a.overall_score;
+                    const scoreColor = score >= 60
+                      ? "text-emerald-600 bg-emerald-50 border-emerald-100"
+                      : score >= 30
+                        ? "text-amber-600 bg-amber-50 border-amber-100"
+                        : "text-red-500 bg-red-50 border-red-100";
+
+                    return (
+                      <div
+                        key={a.id}
+                        onClick={() => {
+                          if (!a.result_snapshot) return;
+                          const brandLower = a.brand.toLowerCase().trim();
+                          const aTime = new Date(a.created_at).getTime();
+                          const prev = pastAnalyses.find(
+                            p => p.brand.toLowerCase().trim() === brandLower && new Date(p.created_at).getTime() < aTime
+                          );
+                          setPreviousScore(prev?.overall_score);
+                          setCurrentAnalysisId(a.id);
+                          setResult(a.result_snapshot as unknown as AnalyzeResponse);
+                          setMarket(a.market);
+                          setBrand(a.brand);
+                          setStep("results");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-4 py-3 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all group"
+                      >
+                        <div className="h-8 w-8 flex-shrink-0 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-black text-slate-500">
+                          {a.brand[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{a.brand}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-slate-400">{a.market.toUpperCase()}</span>
+                            <span className="text-slate-200">·</span>
+                            <div className="flex gap-0.5">
+                              {a.active_models.map((m) => (
+                                <span key={m} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: MODEL_COLORS[m] ?? "#94a3b8" }} />
+                              ))}
+                            </div>
+                            <span className="text-slate-200">·</span>
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(a.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`rounded-full border px-2 py-0.5 text-xs font-black ${scoreColor}`}>
+                            {score.toFixed(0)}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShareTarget({ id: a.id, brand: a.brand, score: a.overall_score, market: a.market });
+                            }}
+                            className="rounded-lg p-1 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100"
+                            title="Share"
+                          >
+                            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                            </svg>
+                          </button>
+                          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="text-slate-300 group-hover:text-slate-400 transition-colors">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                          </svg>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {pastAnalyses.length > 5 && (
+                    <button
+                      onClick={() => router.push("/dashboard")}
+                      className="w-full rounded-xl border border-dashed border-slate-200 py-2.5 text-xs font-semibold text-slate-400 hover:text-indigo-500 hover:border-indigo-200 transition-all"
+                    >
+                      View all {pastAnalyses.length} analyses →
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
