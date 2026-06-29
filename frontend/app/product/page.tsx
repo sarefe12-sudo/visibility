@@ -325,15 +325,18 @@ export default function ProductPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-bold text-slate-900">Full Platform API</h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-200 text-violet-700">COMING SOON</span>
+                    <h3 className="font-bold text-slate-900">MCP API Access</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">LIVE</span>
                   </div>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-3">The entire VisibilityRadar platform — programmatically. Trigger analyses, pull scores, retrieve content, track competitors, and build your own dashboards on top of our data. Integrate AI visibility directly into your marketing stack.</p>
-                  <div className="flex flex-wrap gap-2">
-                    {["POST /analyze", "GET /scores", "GET /content", "POST /generate", "GET /competitors"].map((ep) => (
+                  <p className="text-sm text-slate-500 leading-relaxed mb-3">Run VisibilityRadar analyses directly from Claude Desktop, Cursor, or Windsurf — no browser needed. Generate an API key in Account Settings and connect in seconds via the Model Context Protocol.</p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {["POST /api/mcp/analyze", "GET /api/mcp/history"].map((ep) => (
                       <code key={ep} className="text-[10px] font-mono bg-violet-100 text-violet-700 px-2 py-1 rounded">{ep}</code>
                     ))}
                   </div>
+                  <a href="/profile" className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:text-violet-900 transition-colors">
+                    Get your API key →
+                  </a>
                 </div>
               </div>
             </div>

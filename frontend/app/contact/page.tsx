@@ -129,6 +129,23 @@ export default function ContactPage() {
                   <p className="text-xs text-blue-600">Stay updated with the latest news</p>
                 </div>
               </a>
+
+              <a
+                href="https://x.com/CHARTQ110335"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 hover:bg-slate-100 transition-colors group"
+              >
+                <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-slate-200 group-hover:bg-slate-300 transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Follow us on X</p>
+                  <p className="text-xs text-slate-500">Updates, tips & AI visibility insights</p>
+                </div>
+              </a>
             </div>
 
             {/* Right — form */}

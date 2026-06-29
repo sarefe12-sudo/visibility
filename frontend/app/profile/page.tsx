@@ -158,7 +158,7 @@ export default function ProfilePage() {
                 <div>
                   <p className="text-sm font-bold capitalize text-slate-800">{tier} Plan</p>
                   <p className="text-xs text-slate-400">
-                    {tier === "free" ? "1 analysis included" : tier === "pro" ? "$29/month" : "$99/month"}
+                    {tier === "free" ? "1 analysis included" : tier === "pro" ? "$49/month" : "$599/month"}
                   </p>
                 </div>
               </div>

@@ -66,7 +66,7 @@ const PLANS = [
   },
   {
     name: "Agency",
-    price: "$99",
+    price: "$599",
     period: "/month",
     variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_AGENCY_VARIANT_ID,
     tier: "agency",
