@@ -52,7 +52,7 @@ const PLANS = [
     features: [
       { text: "10 analyses per month", ok: true },
       { text: "All 6 AI models", ok: true },
-      { text: "25 prompts · 3 competitors", ok: true },
+      { text: "25 prompts · 5 competitors", ok: true },
       { text: "Full sentiment analysis", ok: true },
       { text: "AI Strategy Playbook", ok: true },
       { text: "AI Content Studio — 5 posts/analysis", ok: true },
@@ -76,7 +76,7 @@ const PLANS = [
     features: [
       { text: "Unlimited analyses", ok: true },
       { text: "All 6 AI models", ok: true },
-      { text: "50 prompts · 5 competitors", ok: true },
+      { text: "50 prompts · 10 competitors", ok: true },
       { text: "Full sentiment analysis", ok: true },
       { text: "AI Strategy Playbook", ok: true },
       { text: "AI Content Studio — unlimited", ok: true },
