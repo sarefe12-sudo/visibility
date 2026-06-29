@@ -206,12 +206,25 @@ export default function DashboardPage() {
             </h1>
             <p className="text-sm text-slate-400 mt-0.5">Your AI visibility analysis history</p>
           </div>
-          <button
-            onClick={() => router.push("/analyze")}
-            className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-all self-start sm:self-auto"
-          >
-            + New Analysis
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {/* History count pill — click scrolls to list */}
+            {!loading && analyses.length > 0 && (
+              <button
+                onClick={() => document.getElementById("analysis-list")?.scrollIntoView({ behavior: "smooth" })}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center gap-2"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M3.05 11a9 9 0 1 0 .5-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                {analyses.length} {analyses.length === 1 ? "analysis" : "analyses"}
+                {limits.history_days > 0 ? ` · last ${limits.history_days} days` : ""}
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/analyze")}
+              className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-all"
+            >
+              + New Analysis
+            </button>
+          </div>
         </div>
 
         {/* Tier card */}
@@ -297,7 +310,7 @@ export default function DashboardPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div id="analysis-list" className="space-y-3">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
               {analyses.length} {analyses.length === 1 ? "analysis" : "analyses"}
               {limits.history_days > 0 ? ` · last ${limits.history_days} days` : ""}
