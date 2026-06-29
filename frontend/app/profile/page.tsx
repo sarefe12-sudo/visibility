@@ -251,7 +251,7 @@ export default function ProfilePage() {
             <p className="text-sm text-indigo-700 leading-relaxed mb-3">
               Once set up, you can simply ask your AI assistant: <em>&quot;Analyze Nike&apos;s AI visibility&quot;</em> and get a full score report instantly. Results are automatically saved to your dashboard.
             </p>
-            <div className="space-y-2">
+            <div className="space-y-2 mb-4">
               {[
                 "Analyze any brand directly from your AI chat",
                 "Compare competitors without leaving your workflow",
@@ -264,6 +264,9 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
+            <a href="/docs" className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all">
+              View API & MCP Docs →
+            </a>
           </div>
         )}
       </div>
