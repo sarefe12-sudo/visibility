@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
+import ApiKeyCard from "@/components/ApiKeyCard";
 import type { AppUser, UserType } from "@/lib/supabase";
 
 const CANCEL_REASONS = [
@@ -234,6 +235,37 @@ export default function ProfilePage() {
             {saved ? "✓ Saved" : saving ? "Saving…" : "Save Changes"}
           </button>
         </form>
+
+        {/* MCP API Keys */}
+        <div className="mt-6">
+          <ApiKeyCard tier={tier} />
+        </div>
+
+        {/* MCP explainer */}
+        {(tier === "pro" || tier === "agency") && (
+          <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-6">
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-3">What is MCP?</p>
+            <p className="text-sm text-indigo-800 leading-relaxed mb-3">
+              <strong>MCP (Model Context Protocol)</strong> lets you use VisibilityRadar directly inside AI tools like Claude Desktop, Cursor, and Windsurf — without opening a browser.
+            </p>
+            <p className="text-sm text-indigo-700 leading-relaxed mb-3">
+              Once set up, you can simply ask your AI assistant: <em>&quot;Analyze Nike&apos;s AI visibility&quot;</em> and get a full score report instantly. Results are automatically saved to your dashboard.
+            </p>
+            <div className="space-y-2">
+              {[
+                "Analyze any brand directly from your AI chat",
+                "Compare competitors without leaving your workflow",
+                "Results sync to your VisibilityRadar dashboard",
+                "Uses your existing monthly analysis credits",
+              ].map(item => (
+                <div key={item} className="flex items-center gap-2 text-xs text-indigo-700">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#6366f1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
