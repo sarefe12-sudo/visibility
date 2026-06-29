@@ -1,0 +1,24 @@
+{
+  "name": "visibilityradar-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for VisibilityRadar — check how AI models see your brand",
+  "main": "dist/index.js",
+  "bin": {
+    "visibilityradar-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": ["mcp", "ai", "brand", "seo", "geo", "visibility", "llm"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.0.0"
+  }
+}

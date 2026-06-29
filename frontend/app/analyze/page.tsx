@@ -329,7 +329,7 @@ export default function AnalyzePage() {
                               e.stopPropagation();
                               setShareTarget({ id: a.id, brand: a.brand, score: a.overall_score, market: a.market });
                             }}
-                            className="rounded-lg p-1 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100"
+                            className="rounded-lg p-1 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all"
                             title="Share"
                           >
                             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

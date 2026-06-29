@@ -8,6 +8,7 @@ import Dashboard from "@/components/Dashboard";
 import ShareModal from "@/components/ShareModal";
 import AlertPreferences from "@/components/AlertPreferences";
 import PromptLibrary from "@/components/PromptLibrary";
+import ApiKeyCard from "@/components/ApiKeyCard";
 import type { Analysis, AppUser } from "@/lib/supabase";
 import { TIER_LIMITS } from "@/lib/supabase";
 import type { AnalyzeResponse } from "@/types";
@@ -268,6 +269,13 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* MCP API Keys */}
+        {!loading && (
+          <div className="mb-6">
+            <ApiKeyCard tier={tier} />
+          </div>
+        )}
+
         {/* Analysis list */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -374,7 +382,7 @@ export default function DashboardPage() {
                         e.stopPropagation();
                         setShareTarget({ id: a.id, brand: a.brand, score: a.overall_score, market: a.market });
                       }}
-                      className="rounded-lg p-1.5 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100"
+                      className="rounded-lg p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all"
                       title="Share score"
                     >
                       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

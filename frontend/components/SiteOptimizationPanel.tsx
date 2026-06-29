@@ -78,7 +78,8 @@ function FreeTeaserCard({ brand }: { brand: string }) {
 function isBrandRelated(url: string, brand: string): boolean {
   try {
     const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase()
-    const brandWords = brand.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2)
+    // Split brand into words, allow short words too (min 2 chars — e.g. "tv+")
+    const brandWords = brand.toLowerCase().replace(/[^a-z0-9\s+]/g, '').split(/\s+/).filter(w => w.length >= 2)
     return brandWords.some(w => domain.includes(w))
   } catch {
     return false
@@ -87,7 +88,11 @@ function isBrandRelated(url: string, brand: string): boolean {
 
 export default function SiteOptimizationPanel({ brand, websiteHint, tier }: Props) {
   const isPremium = tier === 'pro' || tier === 'agency'
-  const [url, setUrl] = useState(websiteHint ?? '')
+  const [url, setUrl] = useState(() => {
+    if (!websiteHint) return ''
+    // Normalize duplicate TLDs like boatsy.com.com → boatsy.com
+    return websiteHint.replace(/(\.\w{2,6})\1+$/, '$1')
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<Analysis | null>(null)

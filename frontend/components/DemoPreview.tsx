@@ -68,7 +68,7 @@ export default function DemoPreview() {
             </div>
             <div className="flex-1 max-w-xs mx-auto rounded-lg border border-slate-200 bg-white px-3 py-1 flex items-center gap-2">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#94a3b8" strokeWidth="2.5"/><path d="M12 8v4M12 16h.01" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round"/></svg>
-              <span className="text-[11px] text-slate-400 truncate">visibilityradar.com/results</span>
+              <span className="text-[11px] text-slate-400 truncate">visibilityradar.ai/results</span>
             </div>
             <div className="flex-shrink-0 flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />

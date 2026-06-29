@@ -1,40 +1,79 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+export const maxDuration = 300 // 5 minutes — requires Vercel Pro plan
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Topic rotation — never repeat the same topic back-to-back
 const TOPICS = [
-  { title: "What Is GEO Optimization and Why Every Brand Needs It in 2025", keywords: ["GEO optimization", "generative engine optimization", "AI search", "brand visibility"] },
-  { title: "How AI Models Decide Which Brands to Mention (And How to Get Mentioned More)", keywords: ["AI brand mentions", "LLM brand visibility", "ChatGPT brand", "Claude brand mentions"] },
-  { title: "Share of Voice in the Age of AI: A New Metric Every CMO Should Track", keywords: ["share of voice AI", "AI brand awareness", "LLM share of voice"] },
-  { title: "Why Your Brand Might Be Invisible to ChatGPT, Gemini, and Claude", keywords: ["brand invisible AI", "AI visibility score", "LLM brand recognition"] },
-  { title: "The Complete Guide to LLM SEO: Ranking in AI Answers Instead of Search Results", keywords: ["LLM SEO", "AI search optimization", "rank in AI answers", "generative search"] },
-  { title: "How to Measure Your Brand's AI Visibility: A Step-by-Step Framework", keywords: ["measure AI visibility", "AI brand score", "brand AI benchmark"] },
-  { title: "ChatGPT vs Gemini vs Claude: Which AI Model Is Best for Brand Discovery?", keywords: ["ChatGPT brand discovery", "Gemini brand mentions", "Claude AI brand"] },
-  { title: "Generative Engine Optimization (GEO): The SEO Strategy for the AI Era", keywords: ["generative engine optimization", "GEO strategy", "AI era SEO"] },
-  { title: "How to Optimize Your Content to Appear in AI-Generated Answers", keywords: ["content optimization AI", "appear in AI answers", "LLM content strategy"] },
-  { title: "Brand Sentiment in AI: Why Being Mentioned Isn't Enough", keywords: ["AI brand sentiment", "LLM brand perception", "AI brand analysis"] },
-  { title: "The Hidden SEO War: How Top Brands Are Fighting for AI Visibility", keywords: ["AI visibility competition", "brand AI ranking", "LLM brand competition"] },
-  { title: "Perplexity AI and Brand Visibility: What Marketers Need to Know", keywords: ["Perplexity AI brand", "Perplexity brand mentions", "AI search brand"] },
-  { title: "From Zero to AI Visibility: A 90-Day Brand Optimization Plan", keywords: ["AI visibility plan", "brand AI optimization", "90 day AI SEO"] },
-  { title: "Why AI Models Favor Some Brands Over Others (The Training Data Effect)", keywords: ["AI training data brands", "LLM brand favoritism", "AI model brand bias"] },
-  { title: "Competitive Intelligence in the AI Age: Track Competitor Mentions Across LLMs", keywords: ["AI competitive intelligence", "competitor AI mentions", "LLM competitor analysis"] },
+  { title: "What Is GEO Optimization and Why Every Brand Needs It in 2025", angle: "explainer", keywords: ["GEO optimization", "generative engine optimization", "AI search", "brand visibility"], devtoTags: ["seo", "ai", "marketing", "webdev"], hashnodeTags: ["seo", "ai", "marketing"] },
+  { title: "How AI Models Decide Which Brands to Mention", angle: "how-it-works", keywords: ["AI brand mentions", "LLM brand visibility", "ChatGPT brand", "brand discovery"], devtoTags: ["ai", "marketing", "seo", "llm"], hashnodeTags: ["ai", "seo", "marketing"] },
+  { title: "Share of Voice in the Age of AI: A New Metric for Marketers", angle: "data-driven", keywords: ["share of voice AI", "AI brand awareness", "LLM share of voice", "brand analytics"], devtoTags: ["ai", "marketing", "analytics", "seo"], hashnodeTags: ["ai", "marketing", "analytics"] },
+  { title: "Why Your Brand Might Be Invisible to ChatGPT, Gemini, and Claude", angle: "problem-solution", keywords: ["brand invisible AI", "AI visibility", "LLM brand recognition", "AI search"], devtoTags: ["ai", "seo", "marketing", "chatgpt"], hashnodeTags: ["ai", "seo", "marketing"] },
+  { title: "LLM SEO: How to Rank in AI Answers Instead of Search Results", angle: "guide", keywords: ["LLM SEO", "AI search optimization", "rank in AI answers", "generative search"], devtoTags: ["seo", "ai", "webdev", "tutorial"], hashnodeTags: ["seo", "ai", "tutorial"] },
+  { title: "How to Measure Your Brand's AI Visibility: A Practical Framework", angle: "framework", keywords: ["measure AI visibility", "AI brand score", "brand AI benchmark", "AI analytics"], devtoTags: ["ai", "analytics", "marketing", "seo"], hashnodeTags: ["ai", "analytics", "marketing"] },
+  { title: "Generative Engine Optimization (GEO): The New Frontier of Digital Marketing", angle: "trend", keywords: ["generative engine optimization", "GEO", "AI era SEO", "future of SEO"], devtoTags: ["seo", "ai", "marketing", "webdev"], hashnodeTags: ["seo", "ai", "marketing"] },
+  { title: "How to Get Your Content Cited in AI-Generated Answers", angle: "actionable", keywords: ["content cited AI", "appear in AI answers", "LLM content strategy", "AI citations"], devtoTags: ["seo", "ai", "content", "tutorial"], hashnodeTags: ["seo", "ai", "content"] },
+  { title: "AI Brand Sentiment: Why Being Mentioned Isn't Enough", angle: "analysis", keywords: ["AI brand sentiment", "LLM brand perception", "brand reputation AI", "AI brand analysis"], devtoTags: ["ai", "marketing", "analytics", "branding"], hashnodeTags: ["ai", "marketing", "branding"] },
+  { title: "Tracking Competitor Mentions Across AI Models: A Marketer's Guide", angle: "competitive", keywords: ["AI competitive intelligence", "competitor AI mentions", "LLM competitor analysis", "brand monitoring"], devtoTags: ["ai", "marketing", "analytics", "seo"], hashnodeTags: ["ai", "marketing", "analytics"] },
+  { title: "The Training Data Effect: Why Some Brands Dominate AI Responses", angle: "deep-dive", keywords: ["AI training data brands", "LLM brand bias", "AI brand recognition", "brand authority"], devtoTags: ["ai", "machinelearning", "marketing", "seo"], hashnodeTags: ["ai", "machinelearning", "marketing"] },
+  { title: "Perplexity AI and Brand Discovery: What Marketers Need to Know", angle: "platform-specific", keywords: ["Perplexity AI brand", "Perplexity brand mentions", "AI search discovery"], devtoTags: ["ai", "seo", "marketing", "search"], hashnodeTags: ["ai", "seo", "marketing"] },
+  { title: "From Zero to AI Visibility: A 90-Day Brand Strategy", angle: "roadmap", keywords: ["AI visibility strategy", "brand AI optimization", "AI SEO plan"], devtoTags: ["seo", "ai", "marketing", "strategy"], hashnodeTags: ["seo", "ai", "strategy"] },
+  { title: "How Prompt Engineering Affects Which Brands AI Recommends", angle: "technical", keywords: ["prompt engineering brands", "AI recommendations", "LLM brand mentions", "AI marketing"], devtoTags: ["ai", "machinelearning", "webdev", "seo"], hashnodeTags: ["ai", "machinelearning", "seo"] },
+  { title: "AI Search vs Google Search: How Brand Discovery Is Changing", angle: "comparison", keywords: ["AI search vs Google", "brand discovery shift", "LLM search", "future of search"], devtoTags: ["ai", "seo", "search", "marketing"], hashnodeTags: ["ai", "seo", "marketing"] },
 ]
+
+const DEVTO_PROMPT = (topic: typeof TOPICS[0]) => `You are writing a technical/marketing article for Dev.to — a community for software developers and technical marketers. The audience values practical insight, real examples, and actionable advice. They distrust fluff and obvious self-promotion.
+
+ARTICLE TITLE: ${topic.title}
+ANGLE: ${topic.angle}
+KEYWORDS TO USE NATURALLY: ${topic.keywords.join(', ')}
+
+STRICT REQUIREMENTS (Dev.to community guidelines):
+- 900-1200 words. Concise and dense with value — Dev.to readers skim long intros
+- Start with a compelling 2-3 sentence hook that states the problem clearly
+- Use H2 headings (##), code blocks for any technical examples, and bullet lists
+- Provide at least 3 concrete, actionable takeaways readers can apply today
+- Tone: direct, peer-to-peer, slightly informal — like a smart colleague sharing something they learned
+- Include exactly ONE natural mention of VisibilityRadar (https://visibilityradar.ai) — only where it genuinely fits as a tool that solves a specific problem you described. Do not lead with it or end with it. Embed it mid-article.
+- Do NOT write a promotional article. The article must stand alone as valuable content even without the tool mention.
+- No "In conclusion" — end with a forward-looking insight or open question
+- Do NOT add any author bio, tags, or front matter — just the markdown body
+
+Return ONLY the markdown article body.`
+
+const HASHNODE_PROMPT = (topic: typeof TOPICS[0]) => `You are writing a thought-leadership article for Hashnode — a blogging platform for developers and tech marketers who want deep, insightful content. The audience values frameworks, mental models, and strategic thinking.
+
+ARTICLE TITLE: ${topic.title}
+ANGLE: ${topic.angle} (approach this from a strategic/business perspective, not just tactical)
+KEYWORDS TO USE NATURALLY: ${topic.keywords.join(', ')}
+
+STRICT REQUIREMENTS (Hashnode community guidelines):
+- 1100-1400 words
+- Structure: Problem framing → Why it matters now → Framework or mental model → Real-world application → Key insight
+- Use H2 (##) and H3 (###) headings, numbered lists for steps/frameworks
+- Include at least one concrete data point, case study analogy, or specific example
+- Tone: confident, thoughtful, slightly more formal than Dev.to — like a senior practitioner sharing a framework
+- Include exactly ONE natural mention of VisibilityRadar (https://visibilityradar.ai) — position it as a specific solution to a specific problem you've already established. Don't name it in the intro or conclusion.
+- The article must teach something genuinely useful independent of any tool
+- End with 3-4 "Key Takeaways" bullet points
+- Do NOT add any front matter, tags, or meta — just the markdown body
+
+Return ONLY the markdown article body.`
 
 async function getLastPublishedTopics(): Promise<string[]> {
   const { data } = await supabase
     .from('backlink_publications')
     .select('topic_title')
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(7)
   return (data ?? []).map((d: { topic_title: string }) => d.topic_title)
 }
 
-async function generateArticle(topic: typeof TOPICS[0]): Promise<{ title: string; content: string; tags: string[] }> {
+async function callClaude(prompt: string): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -45,102 +84,100 @@ async function generateArticle(topic: typeof TOPICS[0]): Promise<{ title: string
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 4000,
-      messages: [{
-        role: 'user',
-        content: `Write a high-quality, SEO-optimized blog article for the following topic. The article should be published on developer/marketer blogs.
-
-TOPIC: ${topic.title}
-TARGET KEYWORDS: ${topic.keywords.join(', ')}
-
-REQUIREMENTS:
-- 1200-1500 words
-- Use H2 and H3 headings (markdown format)
-- Natural keyword usage — do NOT stuff keywords
-- Include exactly 2 natural references to "VisibilityRadar" (https://visibilityradar.ai) as a tool that solves the problem discussed — mention it as a real solution, not promotional
-- Include a short intro, 3-4 main sections with actionable advice, and a conclusion with CTA
-- Write in clear, confident, slightly conversational English — not corporate fluff
-- Do NOT include "Generated by AI" or any disclosure
-- End with a section "Key Takeaways" with 4-5 bullet points
-
-Return ONLY the markdown article, no meta-commentary.`,
-      }],
+      messages: [{ role: 'user', content: prompt }],
     }),
   })
-
   const data = await res.json()
-  const content = data.content?.[0]?.text ?? ''
-  const tags = topic.keywords.slice(0, 4).map((k: string) => k.replace(/\s+/g, '-').toLowerCase())
-
-  return { title: topic.title, content, tags }
+  return data.content?.[0]?.text ?? ''
 }
 
-async function publishToDevTo(article: { title: string; content: string; tags: string[] }): Promise<string | null> {
+async function publishToDevTo(topic: typeof TOPICS[0], content: string): Promise<string | null> {
   const apiKey = process.env.DEVTO_API_KEY
   if (!apiKey) return null
 
   const res = await fetch('https://dev.to/api/articles', {
     method: 'POST',
-    headers: {
-      'api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       article: {
-        title: article.title,
-        body_markdown: article.content,
+        title: topic.title,
+        body_markdown: content,
         published: true,
-        tags: article.tags.slice(0, 4),
-        canonical_url: null,
-        description: article.title,
+        tags: topic.devtoTags.slice(0, 4),
+        description: `A practical guide to ${topic.keywords[0]} — what it means, why it matters, and how to act on it.`,
       },
     }),
   })
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    console.error('[backlink] Dev.to error:', err)
+    console.error('[backlink] Dev.to error:', res.status, await res.text().catch(() => ''))
     return null
   }
-
   const data = await res.json()
   return data.url ?? null
 }
 
-async function publishToHashnode(article: { title: string; content: string; tags: string[] }): Promise<string | null> {
+async function publishToGist(topic: typeof TOPICS[0], content: string): Promise<string | null> {
+  const token = process.env.GITHUB_TOKEN
+  if (!token) return null
+
+  const res = await fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      description: topic.title,
+      public: true,
+      files: {
+        [`${topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60)}.md`]: {
+          content,
+        },
+      },
+    }),
+  })
+
+  if (!res.ok) {
+    console.error('[backlink] GitHub Gist error:', res.status, await res.text().catch(() => ''))
+    return null
+  }
+  const data = await res.json()
+  return data.html_url ?? null
+}
+
+async function publishToHashnode(topic: typeof TOPICS[0], content: string): Promise<string | null> {
   const token = process.env.HASHNODE_ACCESS_TOKEN
   const publicationId = process.env.HASHNODE_PUBLICATION_ID
   if (!token || !publicationId) return null
 
+  const slug = topic.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 75)
+
   const query = `
     mutation PublishPost($input: PublishPostInput!) {
       publishPost(input: $input) {
-        post {
-          url
-        }
+        post { url }
       }
     }
   `
 
-  const slug = article.title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 60)
-
   const res = await fetch('https://gql.hashnode.com', {
     method: 'POST',
-    headers: {
-      'Authorization': token,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Authorization': token, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query,
       variables: {
         input: {
-          title: article.title,
-          contentMarkdown: article.content,
+          title: topic.title,
+          contentMarkdown: content,
           publicationId,
-          slug,
+          slug: `${slug}-${Date.now().toString(36)}`,
           tags: [],
         },
       },
@@ -151,25 +188,15 @@ async function publishToHashnode(article: { title: string; content: string; tags
     console.error('[backlink] Hashnode error:', res.status)
     return null
   }
-
   const data = await res.json()
+  if (data.errors) {
+    console.error('[backlink] Hashnode GraphQL errors:', JSON.stringify(data.errors))
+    return null
+  }
   return data?.data?.publishPost?.post?.url ?? null
 }
 
-async function logPublication(params: {
-  topic_title: string
-  devto_url: string | null
-  hashnode_url: string | null
-}) {
-  await supabase.from('backlink_publications').insert({
-    topic_title: params.topic_title,
-    devto_url: params.devto_url,
-    hashnode_url: params.hashnode_url,
-    created_at: new Date().toISOString(),
-  })
-}
-
-// POST /api/backlink-publisher — called by Vercel Cron daily at 09:00 UTC
+// POST /api/backlink-publisher — Vercel Cron triggers this daily at 09:00 UTC
 export async function POST(req: Request) {
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
@@ -178,46 +205,47 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Pick a topic not used in the last 5 publications
+    // Pick a fresh topic
     const recentTitles = await getLastPublishedTopics()
     const available = TOPICS.filter(t => !recentTitles.includes(t.title))
     const pool = available.length > 0 ? available : TOPICS
     const topic = pool[Math.floor(Math.random() * pool.length)]
 
-    // Generate article
-    const article = await generateArticle(topic)
-
-    // Publish in parallel
-    const [devtoUrl, hashnodeUrl] = await Promise.all([
-      publishToDevTo(article),
-      publishToHashnode(article),
+    // Generate two different articles — same topic, different angle/format
+    // so they're original content on each platform (avoids duplicate content flags)
+    const [devtoContent, hashnodeContent] = await Promise.all([
+      callClaude(DEVTO_PROMPT(topic)),
+      callClaude(HASHNODE_PROMPT(topic)),
     ])
 
-    // Log to Supabase
-    await logPublication({
+    // Publish in parallel — Gist uses the Hashnode (strategic) version
+    const [devtoUrl, hashnodeUrl, gistUrl] = await Promise.all([
+      publishToDevTo(topic, devtoContent),
+      publishToHashnode(topic, hashnodeContent),
+      publishToGist(topic, hashnodeContent),
+    ])
+
+    // Log
+    await supabase.from('backlink_publications').insert({
       topic_title: topic.title,
       devto_url: devtoUrl,
       hashnode_url: hashnodeUrl,
+      gist_url: gistUrl,
     })
 
-    return NextResponse.json({
-      ok: true,
-      topic: topic.title,
-      devto_url: devtoUrl,
-      hashnode_url: hashnodeUrl,
-    })
+    return NextResponse.json({ ok: true, topic: topic.title, devto_url: devtoUrl, hashnode_url: hashnodeUrl, gist_url: gistUrl })
   } catch (e) {
     console.error('[backlink-publisher]', e)
     return NextResponse.json({ error: String(e) }, { status: 500 })
   }
 }
 
+// GET — show recent publications (admin use)
 export async function GET() {
-  // Show recent publications
   const { data } = await supabase
     .from('backlink_publications')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(20)
+    .limit(30)
   return NextResponse.json({ publications: data ?? [] })
 }
