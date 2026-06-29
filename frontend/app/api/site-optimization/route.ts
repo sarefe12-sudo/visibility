@@ -29,8 +29,14 @@ export async function POST(req: Request) {
   // Validate URL is related to the brand
   try {
     const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase()
-    const brandWords = (brand as string).toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter((w: string) => w.length > 2)
-    const isRelated = brandWords.some((w: string) => domain.includes(w))
+    const normalizedBrand = (brand as string).toLowerCase()
+    const symbolMap: Record<string, string> = { '+': 'plus', '#': 'sharp', '&': 'and', '@': 'at' }
+    let symbolized = normalizedBrand
+    for (const [sym, word] of Object.entries(symbolMap)) symbolized = symbolized.replace(sym, word)
+    const rawWords = normalizedBrand.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((w: string) => w.length >= 2)
+    const symbolWords = symbolized.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((w: string) => w.length >= 2)
+    const variants = [...rawWords, ...symbolWords, symbolWords.join('')]
+    const isRelated = variants.some((v: string) => domain.includes(v))
     if (!isRelated) {
       return NextResponse.json({ error: `This site does not appear to be related to the brand "${brand}". Only websites belonging to ${brand} can be analyzed.` }, { status: 400 })
     }

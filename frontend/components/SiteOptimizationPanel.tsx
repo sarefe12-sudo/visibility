@@ -78,9 +78,23 @@ function FreeTeaserCard({ brand }: { brand: string }) {
 function isBrandRelated(url: string, brand: string): boolean {
   try {
     const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase()
-    // Split brand into words, allow short words too (min 2 chars — e.g. "tv+")
-    const brandWords = brand.toLowerCase().replace(/[^a-z0-9\s+]/g, '').split(/\s+/).filter(w => w.length >= 2)
-    return brandWords.some(w => domain.includes(w))
+    const normalizedBrand = brand.toLowerCase()
+    // Build a list of variants to check against the domain
+    const variants: string[] = []
+    // Raw word tokens (min 2 chars)
+    const rawWords = normalizedBrand.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2)
+    variants.push(...rawWords)
+    // Replace common symbol → word mappings (tv+ → tvplus, c# → csharp, etc.)
+    const symbolMap: Record<string, string> = { '+': 'plus', '#': 'sharp', '&': 'and', '@': 'at' }
+    let symbolized = normalizedBrand
+    for (const [sym, word] of Object.entries(symbolMap)) {
+      symbolized = symbolized.replace(sym, word)
+    }
+    const symbolWords = symbolized.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2)
+    variants.push(...symbolWords)
+    // Also try the full brand slug (e.g. "tv plus" → "tvplus")
+    variants.push(symbolWords.join(''))
+    return variants.some(v => domain.includes(v))
   } catch {
     return false
   }
