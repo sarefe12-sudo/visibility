@@ -83,12 +83,37 @@ export async function POST(req: Request) {
 
   if (!brand) return NextResponse.json({ error: 'brand is required' }, { status: 400 })
 
-  // Fetch user's custom prompts (Pro/Agency feature)
+  // Normalize competitors to the object shape the backend expects: [{ name }]
+  const competitorObjects = (Array.isArray(competitors) ? competitors : [])
+    .map((c: unknown) => (typeof c === 'string' ? { name: c } : c))
+    .filter((c): c is { name: string } => !!c && typeof (c as { name?: string }).name === 'string')
+
+  // Determine prompts: use the user's custom prompts, otherwise have the
+  // backend generate brand-specific ones. The backend REQUIRES a prompts array.
   const { data: customPrompts } = await supabase
     .from('custom_prompts')
     .select('text')
     .eq('user_id', user.id)
     .limit(5)
+
+  let prompts: string[] = (customPrompts ?? []).map(p => p.text).filter(Boolean)
+  if (prompts.length === 0) {
+    const promptRes = await fetch(`${RAILWAY_URL}/generate-prompts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand, market }),
+    })
+    if (!promptRes.ok) {
+      const err = await promptRes.text().catch(() => '')
+      return NextResponse.json({ error: `Prompt generation failed: ${err}` }, { status: 500 })
+    }
+    const promptData = await promptRes.json()
+    prompts = (promptData.prompts ?? []).map((p: { prompt: string }) => p.prompt).filter(Boolean)
+  }
+
+  if (prompts.length === 0) {
+    return NextResponse.json({ error: 'Could not generate analysis prompts' }, { status: 500 })
+  }
 
   // Call Railway backend
   const backendRes = await fetch(`${RAILWAY_URL}/analyze`, {
@@ -96,10 +121,9 @@ export async function POST(req: Request) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       brand,
-      market,
-      competitors,
+      competitors: competitorObjects,
+      prompts,
       tier: user.tier,
-      custom_prompts: customPrompts?.map(p => p.text) ?? [],
     }),
   })
 
@@ -119,8 +143,8 @@ export async function POST(req: Request) {
       market,
       overall_score: result.overall_score,
       active_models: result.active_models,
-      competitor_count: competitors.length,
-      prompt_count: result.prompts_used ?? 5,
+      competitor_count: competitorObjects.length,
+      prompt_count: prompts.length,
       result_snapshot: result,
       source: 'mcp',
     })
@@ -129,15 +153,30 @@ export async function POST(req: Request) {
 
   await supabase.rpc('increment_analyses_count', { user_id_input: user.id })
 
+  // Backend model keys → display names
+  const MODEL_NAMES: Record<string, string> = {
+    claude: 'Claude', gpt4o: 'GPT-4o', gemini: 'Gemini',
+    perplexity: 'Perplexity', grok: 'Grok', deepseek: 'DeepSeek',
+  }
+
   // Return clean summary for MCP (not raw HTML/full result)
   const modelScores = Object.entries(result.model_scores ?? {}).map(([model, score]) => ({
-    model,
+    model: MODEL_NAMES[model] ?? model,
     score,
   }))
 
-  const topRecommendations = (result.recommendations ?? []).slice(0, 3).map((r: { action: string; priority: string }) => ({
-    action: r.action,
-    priority: r.priority,
+  // Backend returns insights: string[] → shape as {action, priority} for the
+  // published MCP client and the documented API response.
+  const PRIORITIES = ['HIGH', 'MEDIUM', 'LOW']
+  const topRecommendations = (result.insights ?? []).slice(0, 3).map((action: string, i: number) => ({
+    action,
+    priority: PRIORITIES[i] ?? 'LOW',
+  }))
+
+  // competitor_scores: Record<name, { overall, per_model }> → flat list
+  const competitorScores = Object.entries(result.competitor_scores ?? {}).map(([name, v]) => ({
+    brand: name,
+    score: (v as { overall?: number })?.overall ?? 0,
   }))
 
   return NextResponse.json({
@@ -146,9 +185,9 @@ export async function POST(req: Request) {
     overall_score: result.overall_score,
     label: result.overall_score >= 70 ? 'Strong' : result.overall_score >= 40 ? 'Moderate' : 'Low',
     model_scores: modelScores,
-    sentiment: result.sentiment ?? null,
+    sentiment: result.sentiment_summary ?? null,
     top_recommendations: topRecommendations,
-    competitors: result.competitor_scores ?? [],
+    competitors: competitorScores,
     dashboard_url: `https://visibilityradar.ai/dashboard`,
     analysis_id: analysis?.id ?? null,
   })
