@@ -56,7 +56,7 @@ function render(template: string, lead: Lead): string {
     .replace(/\{\{\s*score\s*\}\}/gi, lead.overall_score != null ? String(Math.round(lead.overall_score)) : '—')
     .replace(/\{\{\s*worst_model\s*\}\}/gi, lead.worst_model || 'one AI model')
     .replace(/\{\{\s*worst_score\s*\}\}/gi, lead.worst_score != null ? String(Math.round(lead.worst_score)) : '—')
-    .replace(/\{\{\s*recommendation\s*\}\}/gi, lead.top_recommendation || 'improving your AI visibility')
+    .replace(/\{\{\s*recommendation\s*\}\}/gi, (lead.top_recommendation || 'improving your AI visibility').replace(/\.+\s*$/, ''))
     .replace(/\{\{\s*competitors\s*\}\}/gi, formatCompetitors(lead.competitor_scores))
 }
 

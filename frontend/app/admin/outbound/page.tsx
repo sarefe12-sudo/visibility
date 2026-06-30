@@ -52,7 +52,9 @@ Your AI visibility score came back at {{score}}/100. The weaker of the two was {
 Here's how your main competitors scored on the same questions:
 {{competitors}}
 
-The good news: this is fixable. A quick win we'd suggest is {{recommendation}}.
+One pattern that stood out: {{recommendation}}.
+
+The good news: this is very fixable with the right content and positioning.
 
 This is just Claude and ChatGPT. To see how you score across all 6 major models — Gemini, Perplexity, Grok and DeepSeek included — plus your competitor comparison and a per-model fix-it playbook, that's on our Pro plan.
 
