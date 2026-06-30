@@ -93,11 +93,7 @@ function FreeTeaserCard({ brand }: { brand: string }) {
           {/* Overlay CTA */}
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[2px] rounded-xl">
             <p className="text-sm font-semibold text-slate-800 mb-1">Unlock AI Content Studio</p>
-            <p className="text-xs text-slate-500 mb-3 text-center px-4">Get 5 AI-tailored blog posts per analysis to improve your brand&apos;s visibility in ChatGPT, Claude, Gemini and more.</p>
-            <a href="/pricing" className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
-              Upgrade to Pro
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </a>
+            <p className="text-xs text-slate-500 text-center px-4">Get 5 AI-tailored blog posts per analysis to improve your brand&apos;s visibility in ChatGPT, Claude, Gemini and more. Available on the Pro plan.</p>
           </div>
         </div>
       </div>

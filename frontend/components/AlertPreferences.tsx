@@ -64,14 +64,8 @@ export default function AlertPreferences({ tier, userEmail }: Props) {
           <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 border border-indigo-100">Pro</span>
         </div>
         <p className="text-xs text-slate-400 mb-4">
-          Get a weekly email comparing your AI visibility scores — score changes, model breakdowns, competitor alerts.
+          Get a weekly email comparing your AI visibility scores — score changes, model breakdowns, competitor alerts. Available on the Pro plan.
         </p>
-        <a
-          href="/pricing"
-          className="inline-block rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-all"
-        >
-          Upgrade to Pro →
-        </a>
       </div>
     );
   }

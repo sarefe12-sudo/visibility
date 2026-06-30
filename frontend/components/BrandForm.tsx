@@ -238,7 +238,7 @@ export default function BrandForm({ onGenerate, loading, maxCompetitors }: Props
         {compAtLimit && (
           <p className="mb-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
             {maxCompetitors === 1
-              ? <>Demo limit: 1 competitor max. <a href="/pricing" className="font-semibold underline">Upgrade to Pro</a> for up to 5.</>
+              ? "Demo limit: 1 competitor max. Upgrade to Pro for up to 5."
               : `Limit reached: max ${maxCompetitors} competitors on your plan.`
             }
           </p>

@@ -162,12 +162,6 @@ export default function ProfilePage() {
                   </p>
                 </div>
               </div>
-              {tier === "free" && (
-                <button type="button" onClick={() => router.push("/pricing")}
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-all">
-                  Upgrade →
-                </button>
-              )}
               {(tier === "pro" || tier === "agency") && !cancelDone && (
                 <button type="button" onClick={() => setShowCancel(true)}
                   className="rounded-xl border border-red-200 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50 hover:border-red-300 transition-all">

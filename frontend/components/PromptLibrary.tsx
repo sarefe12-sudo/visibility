@@ -95,12 +95,6 @@ export default function PromptLibrary({ tier }: Props) {
             <span className="text-xs text-slate-400">+ {SAMPLE_PROMPTS.length - 4} more sample prompts</span>
           </div>
         </div>
-        <a
-          href="/pricing"
-          className="inline-block rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-all"
-        >
-          Upgrade to Pro →
-        </a>
       </div>
     );
   }

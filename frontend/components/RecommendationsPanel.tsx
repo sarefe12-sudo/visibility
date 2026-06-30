@@ -365,10 +365,6 @@ export default function RecommendationsPanel({ data, market = "global", historyM
                       Perplexity searches the web right now, Grok watches X/Twitter live.
                       <br /><strong className="text-slate-700">Get a tailored strategy for every single one.</strong>
                     </p>
-                    <a href="/pricing"
-                      className="block w-full rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200">
-                      Upgrade to Pro — $49/mo →
-                    </a>
                   </div>
                 </div>
               </div>
@@ -454,10 +450,7 @@ export default function RecommendationsPanel({ data, market = "global", historyM
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#6366f1" strokeWidth="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#6366f1" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
               <p className="text-sm font-extrabold text-slate-900 mb-1">{priority_actions.length} priority actions locked</p>
-              <p className="text-xs text-slate-500 mb-4">Cross-model improvements that boost your score on every AI</p>
-              <a href="/pricing" className="inline-block rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition-all">
-                Unlock with Pro →
-              </a>
+              <p className="text-xs text-slate-500">Cross-model improvements that boost your score on every AI</p>
             </div>
           </div>
         </div>

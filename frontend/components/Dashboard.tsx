@@ -269,10 +269,7 @@ function LockedSection({ title, description, children }: { title: string; descri
             <svg className="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           </div>
           <p className="text-sm font-bold text-slate-800 mb-1">{title}</p>
-          <p className="text-xs text-slate-500 mb-4 max-w-xs">{description}</p>
-          <a href="/pricing" className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white transition-colors">
-            Unlock with Pro · $49/mo
-          </a>
+          <p className="text-xs text-slate-500 max-w-xs">{description}</p>
         </div>
       </div>
     </div>
@@ -369,9 +366,8 @@ export default function Dashboard({ data, market = "global", fromHistory = false
             );
           })}
         </div>
-        <div className="mt-4 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 flex items-center justify-between gap-3">
+        <div className="mt-4 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3">
           <p className="text-xs text-indigo-700 font-medium">Upgrade to test all 6 models — Gemini, Perplexity, Grok & DeepSeek scores unlocked.</p>
-          <a href="/pricing" className="flex-shrink-0 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-xs font-bold text-white transition-colors">Upgrade →</a>
         </div>
       </div>
 
@@ -469,18 +465,6 @@ export default function Dashboard({ data, market = "global", fromHistory = false
         </div>
       </LockedSection>
 
-      {/* ── Sticky upgrade bar ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-indigo-100 bg-white/95 backdrop-blur-sm px-4 py-3">
-        <div className="mx-auto max-w-2xl flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold text-slate-800">You are on the Free plan</p>
-            <p className="text-[11px] text-slate-500">Unlock all 6 models, full playbook, competitor analysis, content studio & more.</p>
-          </div>
-          <a href="/pricing" className="flex-shrink-0 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white transition-colors whitespace-nowrap">
-            Upgrade to Pro →
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

@@ -116,7 +116,7 @@ export default function DocsPage() {
                 </div>
               </div>
               <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 p-4">
-                <p className="text-xs text-amber-800"><strong>Plan requirement:</strong> MCP and API access require a <Link href="/pricing" className="underline font-bold">Pro or Agency plan</Link>. Daily limits: Pro = 5/day, Agency = 20/day.</p>
+                <p className="text-xs text-amber-800"><strong>Plan requirement:</strong> MCP and API access require a Pro or Agency plan. Daily limits: Pro = 5/day, Agency = 20/day.</p>
               </div>
             </section>
 

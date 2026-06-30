@@ -197,9 +197,6 @@ export default function FaqPage() {
             <Link href="/contact" className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-all">
               Contact us →
             </Link>
-            <Link href="/pricing" className="rounded-xl border border-indigo-200 bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition-all">
-              View pricing
-            </Link>
           </div>
         </div>
       </div>

@@ -307,9 +307,6 @@ export default function Home() {
                   <a href="/sign-up" className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-all">
                     Sign up free →
                   </a>
-                  <a href="/pricing" className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">
-                    See plans
-                  </a>
                 </div>
               </div>
             )}
@@ -332,9 +329,6 @@ export default function Home() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#94a3b8" strokeWidth="2"/><path d="M12 8v4M12 16h.01" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round"/></svg>
                 <span className="text-xs text-slate-400">Demo limits:</span>
                 <span className="text-xs font-medium text-slate-600">1 competitor · 10 prompts · 1 use</span>
-                <span className="ml-auto text-xs text-indigo-500 font-medium cursor-pointer hover:underline" onClick={() => router.push("/pricing")}>
-                  Upgrade →
-                </span>
               </div>
             )}
           </div>
@@ -526,9 +520,6 @@ export default function Home() {
                 <a href="/sign-up" className="rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-indigo-700 hover:bg-indigo-50 transition-all whitespace-nowrap shadow-sm">
                   Sign up free →
                 </a>
-                <a href="/pricing" className="rounded-xl border border-white/30 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 transition-all whitespace-nowrap">
-                  See Pro →
-                </a>
               </div>
             </div>
 
@@ -543,8 +534,8 @@ export default function Home() {
                   <p className="text-xs text-emerald-700 mt-0.5">Get 5 AI-tailored blog posts to improve {result.brand}&apos;s visibility — automatically generated from your analysis.</p>
                 </div>
               </div>
-              <a href="/pricing" className="flex-shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white transition-colors whitespace-nowrap">
-                Unlock Content Studio →
+              <a href="/sign-up" className="flex-shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white transition-colors whitespace-nowrap">
+                Get started →
               </a>
             </div>
 
@@ -573,9 +564,6 @@ export default function Home() {
               <div className="flex gap-3 justify-center flex-wrap">
                 <a href="/sign-up" className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all">
                   Create free account →
-                </a>
-                <a href="/pricing" className="rounded-xl border border-indigo-200 bg-indigo-50 px-6 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition-all">
-                  View Pro — $49/mo
                 </a>
                 <button onClick={reset} className="rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 transition-all">
                   Try another brand

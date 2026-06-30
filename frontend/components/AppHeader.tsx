@@ -53,7 +53,6 @@ export default function AppHeader({ onLogoClick }: Props) {
             {navLink("/about", "About")}
             {navLink("/product", "Product")}
             {navLink("/blog", "Blog")}
-            {navLink("/pricing", "Pricing")}
             {isLoaded && isSignedIn && (
               <>
                 {navLink("/analyze", "Analyze")}

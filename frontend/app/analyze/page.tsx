@@ -224,14 +224,6 @@ export default function AnalyzePage() {
                       }
                     </p>
                   </div>
-                  {(isAtLimit || showAmber) && tier !== "agency" && (
-                    <button
-                      onClick={() => router.push("/pricing")}
-                      className="flex-shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all"
-                    >
-                      {tier === "free" ? "Upgrade →" : "Go Agency →"}
-                    </button>
-                  )}
                 </div>
               );
             })()}
@@ -251,14 +243,6 @@ export default function AnalyzePage() {
                     ? "Upgrade to Pro for 10 analyses per month."
                     : "Your quota resets on the 1st of each month."}
                 </p>
-                {tier !== "agency" && (
-                  <button
-                    onClick={() => router.push("/pricing")}
-                    className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-all"
-                  >
-                    {tier === "free" ? "Upgrade to Pro — $49/mo" : "Upgrade to Agency — $599/mo"}
-                  </button>
-                )}
               </div>
             ) : (
               <div ref={formRef}>

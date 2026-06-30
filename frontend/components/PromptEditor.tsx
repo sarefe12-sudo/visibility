@@ -113,7 +113,7 @@ export default function PromptEditor({ prompts: initial, onConfirm, analyzing, b
       {atLimit && (
         <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <p className="text-xs text-amber-700">Prompt limit reached ({promptLimit}). {promptLimit < 25 && <><a href="/pricing" className="font-semibold underline">Upgrade to Pro</a> for 25 prompts.</>}</p>
+          <p className="text-xs text-amber-700">Prompt limit reached ({promptLimit}). {promptLimit < 25 && "Upgrade to Pro for 25 prompts."}</p>
         </div>
       )}
 

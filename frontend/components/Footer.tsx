@@ -66,7 +66,6 @@ export default function Footer() {
                 { href: "/", label: "Free Demo" },
                 { href: "/analyze", label: "Analyze Your Brand" },
                 { href: "/dashboard", label: "Dashboard" },
-                { href: "/pricing", label: "Pricing" },
                 { href: "/blog", label: "Blog" },
                 { href: "/docs", label: "API Docs" },
                 { href: "/faq", label: "FAQ" },
@@ -118,7 +117,7 @@ export default function Footer() {
                   </li>
                 ))}
               </ul>
-              <Link href="/pricing" className="mt-3 block text-center rounded-lg bg-violet-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-violet-700 transition-all">
+              <Link href="/analyze" className="mt-3 block text-center rounded-lg bg-violet-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-violet-700 transition-all">
                 Get your playbook
               </Link>
             </div>

@@ -250,14 +250,6 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-          {tier === "free" && (
-            <button
-              onClick={() => router.push("/pricing")}
-              className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-all self-start sm:self-auto"
-            >
-              Upgrade to Pro →
-            </button>
-          )}
           {(tier === "pro" || tier === "agency") && !cancelDone && (
             <button
               onClick={() => setShowCancel(true)}

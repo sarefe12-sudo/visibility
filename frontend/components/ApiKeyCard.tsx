@@ -76,10 +76,7 @@ export default function ApiKeyCard({ tier }: { tier: string }) {
           </div>
         </div>
         <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4 text-center">
-          <p className="text-xs text-indigo-700 mb-3">MCP access is available on <strong>Pro & Agency</strong> plans</p>
-          <a href="/pricing" className="inline-block rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all">
-            Upgrade to unlock →
-          </a>
+          <p className="text-xs text-indigo-700">MCP access is available on <strong>Pro & Agency</strong> plans</p>
         </div>
       </div>
     )

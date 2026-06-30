@@ -359,9 +359,6 @@ export default function ProductPage() {
             <Link href="/" className="rounded-xl bg-white text-indigo-900 hover:bg-indigo-50 px-10 py-4 text-sm font-black transition-colors">
               Analyze Your Brand Free →
             </Link>
-            <Link href="/pricing" className="rounded-xl border border-indigo-500/40 bg-white/5 hover:bg-white/10 px-10 py-4 text-sm font-bold text-indigo-200 transition-colors">
-              See Pricing
-            </Link>
           </div>
           <p className="mt-6 text-xs text-indigo-500">No credit card · 2-minute setup · Real results from 6 AI models</p>
         </div>
