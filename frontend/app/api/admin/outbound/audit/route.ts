@@ -129,6 +129,7 @@ async function auditOne(lead: Lead) {
       worst_score: worstScore,
       top_recommendation: topRec,
       competitor_scores: competitorScores,
+      sample_query: prompts[0] ?? null,
       error: null,
     }).eq('id', lead.id)
   } catch (e) {

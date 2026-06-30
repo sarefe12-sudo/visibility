@@ -32,6 +32,7 @@ interface Lead {
   worst_score: number | null
   top_recommendation: string | null
   competitor_scores: CompetitorScore[] | null
+  sample_query: string | null
 }
 
 // "Trello — 100/100, Monday.com — 97/100, Jira — 70/100"
@@ -58,6 +59,7 @@ function render(template: string, lead: Lead): string {
     .replace(/\{\{\s*worst_score\s*\}\}/gi, lead.worst_score != null ? String(Math.round(lead.worst_score)) : '—')
     .replace(/\{\{\s*recommendation\s*\}\}/gi, (lead.top_recommendation || 'improving your AI visibility').replace(/\.+\s*$/, ''))
     .replace(/\{\{\s*competitors\s*\}\}/gi, formatCompetitors(lead.competitor_scores))
+    .replace(/\{\{\s*query\s*\}\}/gi, (lead.sample_query || 'the best option in your space').replace(/\?+\s*$/, ''))
 }
 
 function buildHtml(bodyText: string, leadId: string): string {
@@ -72,7 +74,7 @@ function buildHtml(bodyText: string, leadId: string): string {
   return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;color:#1e293b;font-size:15px;line-height:1.6;">
     <p>${htmlBody}</p>
     <p style="margin:28px 0;">
-      <a href="${cta}" style="background:#4f46e5;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:600;display:inline-block;">See your full AI visibility report →</a>
+      <a href="${cta}" style="background:#4f46e5;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:600;display:inline-block;">Generate my AI growth kit →</a>
     </p>
     <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
     <p style="color:#94a3b8;font-size:12px;">VisibilityRadar · <a href="${APP_URL}" style="color:#6366f1;">visibilityradar.ai</a><br>
@@ -99,7 +101,7 @@ export async function POST(req: Request) {
 
   const { data: leads, error } = await supabase
     .from('outbound_leads')
-    .select('id, email, name, brand, company, overall_score, worst_model, worst_score, top_recommendation, competitor_scores')
+    .select('id, email, name, brand, company, overall_score, worst_model, worst_score, top_recommendation, competitor_scores, sample_query')
     .in('id', ids)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

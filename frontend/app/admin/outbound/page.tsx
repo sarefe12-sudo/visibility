@@ -41,24 +41,34 @@ const STATUS_STYLE: Record<string, string> = {
   failed: 'bg-red-500/15 text-red-400',
 }
 
-const DEFAULT_SUBJECT = `{{brand}} scored {{score}}/100 on AI visibility`
+const DEFAULT_SUBJECT = `{{brand}}: how to get recommended by ChatGPT in 30 days`
 
 const DEFAULT_BODY = `Hi {{first_name}},
 
-I checked how the two most-used AI assistants — Claude and ChatGPT — describe {{brand}} when someone asks them for recommendations in your space.
+When someone asks ChatGPT or Claude "{{query}}", they get a recommendation on the spot — and right now, it often isn't {{brand}}.
 
-Your AI visibility score came back at {{score}}/100. The weaker of the two was {{worst_model}} at {{worst_score}}/100 — meaning when buyers ask it for options, {{brand}} often doesn't come up.
+I ran {{brand}} through the AI models your buyers actually use. Here's where you stand:
 
-Here's how your main competitors scored on the same questions:
-{{competitors}}
+• Your AI visibility score: {{score}}/100
+• Competitors on the same questions: {{competitors}}
 
-One pattern that stood out: {{recommendation}}.
+The good news: this is very fixable. Based on your results, three changes would move the needle most over the next 30 days:
 
-The good news: this is very fixable with the right content and positioning.
+1. Publish a structured FAQ that answers the exact questions people ask AI in your space
+2. Add schema markup so AI models can clearly identify who you are and what you offer
+3. Earn a few authoritative mentions (blog, press, LinkedIn) that AI models trust and cite
 
-This is just Claude and ChatGPT. To see how you score across all 6 major models — Gemini, Perplexity, Grok and DeepSeek included — plus your competitor comparison and a per-model fix-it playbook, that's on our Pro plan.
+Here's what makes VisibilityRadar different: it's not just a report. It's an AI Growth Copilot. With one click it generates the assets to actually make those changes for you:
 
-Want me to send over your full report?`
+✓ An SEO blog post tailored to your visibility gaps
+✓ FAQ content built from the real questions buyers ask AI
+✓ Schema markup, ready to paste into your site
+✓ A press release draft
+✓ A LinkedIn post
+
+Make these changes and your odds of being the brand AI recommends for queries like "{{query}}" go up — and we track that score for you month over month.
+
+Want me to generate your growth kit for {{brand}}?`
 
 function StatCard({ label, value, accent }: { label: string; value: number; accent?: string }) {
   return (
@@ -404,7 +414,7 @@ function SendModal({ count, ids, onClose, onDone }: { count: number; ids: string
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-[600px] max-h-[90vh] overflow-y-auto">
         <h3 className="text-white font-semibold mb-1">Compose & Send — {count} recipients</h3>
-        <p className="text-xs text-slate-500 mb-4">From: info@visibilityradar.ai · Tokens: <code className="text-slate-400">{'{{first_name}} {{brand}} {{score}} {{worst_model}} {{worst_score}} {{competitors}} {{recommendation}}'}</code></p>
+        <p className="text-xs text-slate-500 mb-4">From: info@visibilityradar.ai · Tokens: <code className="text-slate-400">{'{{first_name}} {{brand}} {{score}} {{query}} {{worst_model}} {{worst_score}} {{competitors}} {{recommendation}}'}</code></p>
 
         {err && <div className="text-red-400 text-xs mb-3 bg-red-500/10 rounded-lg px-3 py-2">{err}</div>}
 
