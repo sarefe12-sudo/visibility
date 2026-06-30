@@ -16,6 +16,7 @@ interface Lead {
   worst_model: string | null
   worst_score: number | null
   top_recommendation: string | null
+  competitor_scores: { name: string; score: number }[] | null
   email_sent_at: string | null
   opened_at: string | null
   clicked_at: string | null
@@ -47,6 +48,9 @@ const DEFAULT_BODY = `Hi {{first_name}},
 I checked how the two most-used AI assistants — Claude and ChatGPT — describe {{brand}} when someone asks them for recommendations in your space.
 
 Your AI visibility score came back at {{score}}/100. The weaker of the two was {{worst_model}} at {{worst_score}}/100 — meaning when buyers ask it for options, {{brand}} often doesn't come up.
+
+Here's how your main competitors scored on the same questions:
+{{competitors}}
 
 The good news: this is fixable. A quick win we'd suggest is {{recommendation}}.
 
@@ -239,7 +243,12 @@ export default function OutboundPage() {
                     ? <span className={`font-bold ${l.overall_score >= 70 ? 'text-emerald-400' : l.overall_score >= 40 ? 'text-amber-400' : 'text-red-400'}`}>{Math.round(l.overall_score)}</span>
                     : <span className="text-slate-600">—</span>}
                 </td>
-                <td className="px-4 py-3 text-slate-500 text-xs">{l.worst_model ? `${l.worst_model} (${Math.round(l.worst_score ?? 0)})` : '—'}</td>
+                <td className="px-4 py-3 text-slate-500 text-xs">
+                  {l.worst_model ? `${l.worst_model} (${Math.round(l.worst_score ?? 0)})` : '—'}
+                  {l.competitor_scores && l.competitor_scores.length > 0 && (
+                    <div className="text-slate-600 mt-1">vs {l.competitor_scores.slice(0, 3).map(c => `${c.name} ${Math.round(c.score)}`).join(' · ')}</div>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-slate-500 text-xs">{l.email_sent_at ? new Date(l.email_sent_at).toLocaleDateString() : '—'}</td>
               </tr>
             ))}
@@ -393,7 +402,7 @@ function SendModal({ count, ids, onClose, onDone }: { count: number; ids: string
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-[600px] max-h-[90vh] overflow-y-auto">
         <h3 className="text-white font-semibold mb-1">Compose & Send — {count} recipients</h3>
-        <p className="text-xs text-slate-500 mb-4">From: info@visibilityradar.ai · Tokens: <code className="text-slate-400">{'{{first_name}} {{brand}} {{score}} {{worst_model}} {{worst_score}} {{recommendation}}'}</code></p>
+        <p className="text-xs text-slate-500 mb-4">From: info@visibilityradar.ai · Tokens: <code className="text-slate-400">{'{{first_name}} {{brand}} {{score}} {{worst_model}} {{worst_score}} {{competitors}} {{recommendation}}'}</code></p>
 
         {err && <div className="text-red-400 text-xs mb-3 bg-red-500/10 rounded-lg px-3 py-2">{err}</div>}
 

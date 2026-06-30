@@ -66,13 +66,29 @@ async function auditOne(lead: Lead) {
       return
     }
 
-    // Step 2 — run the analysis on the 2 free-tier models only (Claude + GPT-4o).
+    // Step 2 — suggest competitors (top 3) so the pitch shows how rivals score.
+    // Competitors are counted within the same model responses → no extra LLM calls.
+    let competitors: { name: string }[] = []
+    try {
+      const compRes = await fetch(`${RAILWAY_URL}/suggest-competitors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand, market }),
+      })
+      if (compRes.ok) {
+        const compData = await compRes.json()
+        competitors = (compData.competitors ?? []).slice(0, 3).map((name: string) => ({ name }))
+      }
+    } catch {
+      // competitors are optional — continue without them
+    }
+
+    // Step 3 — run the analysis on the 2 free-tier models only (Claude + GPT-4o).
     // The cold-audit pitch teases these two; the other 4 models are the Pro upsell.
-    // Bonus: 2 models instead of 6 → ~3x faster, well under the function budget.
     const res = await fetch(`${RAILWAY_URL}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand, competitors: [], prompts, tier: 'free' }),
+      body: JSON.stringify({ brand, competitors, prompts, tier: 'free' }),
     })
 
     if (!res.ok) {
@@ -99,6 +115,12 @@ async function auditOne(lead: Lead) {
 
     const topRec: string | null = (result.insights ?? [])[0] ?? null
 
+    // Competitor scores → sorted list [{name, score}] descending
+    const compScoresRaw: Record<string, { overall: number }> = result.competitor_scores ?? {}
+    const competitorScores = Object.entries(compScoresRaw)
+      .map(([name, v]) => ({ name, score: v?.overall ?? 0 }))
+      .sort((a, b) => b.score - a.score)
+
     await supabase.from('outbound_leads').update({
       status: 'audited',
       overall_score: result.overall_score ?? null,
@@ -106,6 +128,7 @@ async function auditOne(lead: Lead) {
       worst_model: worstModel,
       worst_score: worstScore,
       top_recommendation: topRec,
+      competitor_scores: competitorScores,
       error: null,
     }).eq('id', lead.id)
   } catch (e) {

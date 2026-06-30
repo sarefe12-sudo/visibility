@@ -19,6 +19,8 @@ async function requireAdmin() {
   return userId
 }
 
+interface CompetitorScore { name: string; score: number }
+
 interface Lead {
   id: string
   email: string
@@ -29,6 +31,13 @@ interface Lead {
   worst_model: string | null
   worst_score: number | null
   top_recommendation: string | null
+  competitor_scores: CompetitorScore[] | null
+}
+
+// "Trello — 100/100, Monday.com — 97/100, Jira — 70/100"
+function formatCompetitors(comps: CompetitorScore[] | null): string {
+  if (!comps || comps.length === 0) return 'your top competitors'
+  return comps.map(c => `${c.name} — ${Math.round(c.score)}/100`).join(', ')
 }
 
 function firstName(name: string | null): string {
@@ -48,6 +57,7 @@ function render(template: string, lead: Lead): string {
     .replace(/\{\{\s*worst_model\s*\}\}/gi, lead.worst_model || 'one AI model')
     .replace(/\{\{\s*worst_score\s*\}\}/gi, lead.worst_score != null ? String(Math.round(lead.worst_score)) : '—')
     .replace(/\{\{\s*recommendation\s*\}\}/gi, lead.top_recommendation || 'improving your AI visibility')
+    .replace(/\{\{\s*competitors\s*\}\}/gi, formatCompetitors(lead.competitor_scores))
 }
 
 function buildHtml(bodyText: string, leadId: string): string {
@@ -89,7 +99,7 @@ export async function POST(req: Request) {
 
   const { data: leads, error } = await supabase
     .from('outbound_leads')
-    .select('id, email, name, brand, company, overall_score, worst_model, worst_score, top_recommendation')
+    .select('id, email, name, brand, company, overall_score, worst_model, worst_score, top_recommendation, competitor_scores')
     .in('id', ids)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
