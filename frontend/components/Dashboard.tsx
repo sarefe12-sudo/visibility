@@ -461,6 +461,27 @@ export default function Dashboard({ data, market = "global", fromHistory = false
         </div>
       </LockedSection>
 
+      {/* ── 6b. AI Growth Kit — locked ── */}
+      <LockedSection title="AI Growth Kit — your copilot" description="One click turns this analysis into the assets that get you recommended by AI: FAQ content, schema markup, a press release, and a LinkedIn post — generated for your brand.">
+        <div className="p-5 grid sm:grid-cols-2 gap-2">
+          {[
+            { icon: "❓", label: "FAQ Content", sub: "Built from real AI queries" },
+            { icon: "{ }", label: "Schema Markup", sub: "JSON-LD, ready to paste" },
+            { icon: "📰", label: "Press Release", sub: "Coverage AI models cite" },
+            { icon: "in", label: "LinkedIn Post", sub: "Ready to publish" },
+          ].map((k) => (
+            <div key={k.label} className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 flex items-center gap-3">
+              <span className="h-8 w-8 flex-shrink-0 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">{k.icon}</span>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-700">{k.label}</p>
+                <p className="text-[10px] text-slate-500">{k.sub}</p>
+              </div>
+              <span className="ml-auto text-[10px] font-bold text-indigo-400 bg-indigo-50 px-2 py-0.5 rounded-full flex-shrink-0">Generate</span>
+            </div>
+          ))}
+        </div>
+      </LockedSection>
+
       {/* ── 7. Site Audit — locked ── */}
       <LockedSection title="AI-Readiness Site Audit" description="We scan your website across 10 AI signals and tell you exactly what to fix to improve how AI models read and trust your brand.">
         <div className="p-5 space-y-2">

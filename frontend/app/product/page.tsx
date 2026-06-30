@@ -119,6 +119,31 @@ const FEATURES = [
     ),
   },
   {
+    tag: "AI Growth Copilot",
+    title: "AI Growth Kit",
+    subtitle: "Not just a report — a copilot that does the work.",
+    body: "Most tools hand you a score and leave. VisibilityRadar turns your analysis into the actual assets that move it. One click generates an FAQ built from the real questions buyers ask AI, schema markup ready to paste, a press release draft, and a LinkedIn post — each tailored to your brand, your gaps, and your market.",
+    highlight: "From insight to published assets in one click.",
+    visual: (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { icon: "❓", label: "FAQ Content", sub: "Built from real AI queries" },
+          { icon: "{ }", label: "Schema Markup", sub: "JSON-LD, ready to paste" },
+          { icon: "📰", label: "Press Release", sub: "Coverage AI models cite" },
+          { icon: "in", label: "LinkedIn Post", sub: "Ready to publish" },
+        ].map((k) => (
+          <div key={k.label} className="rounded-xl bg-white border border-slate-200 px-3 py-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-7 w-7 flex-shrink-0 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[11px] font-bold text-indigo-600">{k.icon}</span>
+              <p className="text-xs font-bold text-slate-800">{k.label}</p>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-snug">{k.sub}</p>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
     tag: "Site Optimization",
     title: "AI-Readiness Site Audit",
     subtitle: "Is your website optimized for AI crawlers?",
