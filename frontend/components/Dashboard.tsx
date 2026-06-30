@@ -10,6 +10,7 @@ import InsightsList from "./InsightsList";
 import PromptsTable from "./PromptsTable";
 import RecommendationsPanel from "./RecommendationsPanel";
 import ContentStudioPanel from "./ContentStudioPanel";
+import GrowthKitPanel from "./GrowthKitPanel";
 import SiteOptimizationPanel from "./SiteOptimizationPanel";
 
 interface SavedPlaybook {
@@ -238,6 +239,14 @@ function PremiumDashboard({ data, market = "global", fromHistory = false, locked
         tier={tier}
         analysisId={analysisId}
         playbook={savedPlaybook}
+      />
+
+      {/* Row 4b: AI Growth Kit */}
+      <GrowthKitPanel
+        data={data}
+        market={market}
+        tier={tier}
+        analysisId={analysisId}
       />
 
       {/* Row 5: Site AI Optimization */}
