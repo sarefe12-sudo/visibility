@@ -107,14 +107,22 @@ export default function OutboundPage() {
   const runAudit = async () => {
     if (selected.size === 0) return
     setBusy('audit')
-    const r = await fetch('/api/admin/outbound/audit', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: selectedIds() }),
-    })
-    const d = await r.json()
+    const ids = selectedIds()
+    let done = 0
+    // Each audit fans out across 6 models (~4 min) → backend processes one lead
+    // per request. Loop through the selection until it's drained.
+    for (const id of ids) {
+      flash(`Auditing ${done + 1}/${ids.length}… (~4 min each)`)
+      const r = await fetch('/api/admin/outbound/audit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      })
+      if (!r.ok) { const d = await r.json().catch(() => ({})); flash(d.error ?? 'Audit failed'); break }
+      done++
+      load()
+    }
     setBusy(null)
-    if (r.ok) { flash(`Audited ${d.audited}${d.remaining ? ` · ${d.remaining} left (run again)` : ''}`); load() }
-    else flash(d.error ?? 'Audit failed')
+    flash(`Audited ${done}/${ids.length}`)
   }
 
   const del = async () => {
@@ -363,6 +371,8 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: (m: str
 function SendModal({ count, ids, onClose, onDone }: { count: number; ids: string[]; onClose: () => void; onDone: (m: string) => void }) {
   const [subject, setSubject] = useState(DEFAULT_SUBJECT)
   const [body, setBody] = useState(DEFAULT_BODY)
+  const [testMode, setTestMode] = useState(true)
+  const [testEmail, setTestEmail] = useState('sarefe12@gmail.com')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -370,10 +380,10 @@ function SendModal({ count, ids, onClose, onDone }: { count: number; ids: string
     setBusy(true); setErr(null)
     const r = await fetch('/api/admin/outbound/send', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids, subject, body }),
+      body: JSON.stringify({ ids, subject, body, testEmail: testMode ? testEmail : undefined }),
     })
     const d = await r.json(); setBusy(false)
-    if (r.ok) onDone(`Sent ${d.sent}${d.failed ? ` · ${d.failed} failed` : ''}${d.remaining ? ` · ${d.remaining} left` : ''}`)
+    if (r.ok) onDone(`${testMode ? 'TEST · ' : ''}Sent ${d.sent}${d.failed ? ` · ${d.failed} failed` : ''}${d.remaining ? ` · ${d.remaining} left` : ''}`)
     else setErr(d.error ?? 'Send failed')
   }
 
@@ -394,6 +404,18 @@ function SendModal({ count, ids, onClose, onDone }: { count: number; ids: string
           <textarea value={body} onChange={e => setBody(e.target.value)} rows={14} className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-indigo-500 resize-none" />
         </div>
         <p className="text-xs text-slate-600 mt-2">A tracked CTA button and open-pixel are added automatically. Best results: audit leads first so scores fill in.</p>
+
+        {/* Test mode */}
+        <div className="mt-4 bg-slate-800/50 border border-slate-700 rounded-lg p-3">
+          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+            <input type="checkbox" checked={testMode} onChange={e => setTestMode(e.target.checked)} className="accent-amber-500" />
+            Test mode — send all to one inbox (lead status unchanged)
+          </label>
+          {testMode && (
+            <input value={testEmail} onChange={e => setTestEmail(e.target.value)}
+              className="w-full mt-2 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500" />
+          )}
+        </div>
 
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="text-slate-400 text-sm px-4 py-2 hover:text-white">Cancel</button>

@@ -77,9 +77,12 @@ export async function POST(req: Request) {
   const adminId = await requireAdmin()
   if (!adminId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { ids, subject, body } = await req.json()
+  const { ids, subject, body, testEmail } = await req.json()
   if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ error: 'ids required' }, { status: 400 })
   if (!subject || !body) return NextResponse.json({ error: 'subject and body required' }, { status: 400 })
+
+  // Test mode: route every email to a single inbox without touching lead status.
+  const testTo = typeof testEmail === 'string' && /\S+@\S+\.\S+/.test(testEmail) ? testEmail.trim() : null
 
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'RESEND_API_KEY not set' }, { status: 500 })
@@ -103,29 +106,37 @@ export async function POST(req: Request) {
     const renderedBody = render(body, lead)
     const html = buildHtml(renderedBody, lead.id)
 
+    const recipient = testTo ?? lead.email
+    const finalSubject = testTo ? `[TEST→${lead.email}] ${renderedSubject}` : renderedSubject
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'VisibilityRadar <info@visibilityradar.ai>',
-        to: [lead.email],
-        subject: renderedSubject,
+        to: [recipient],
+        subject: finalSubject,
         html,
       }),
     })
 
     if (res.ok) {
       sent++
-      await supabase.from('outbound_leads').update({
-        status: 'emailed',
-        email_subject: renderedSubject,
-        email_sent_at: new Date().toISOString(),
-        error: null,
-      }).eq('id', lead.id)
+      // In test mode, don't advance the real lead through the funnel.
+      if (!testTo) {
+        await supabase.from('outbound_leads').update({
+          status: 'emailed',
+          email_subject: renderedSubject,
+          email_sent_at: new Date().toISOString(),
+          error: null,
+        }).eq('id', lead.id)
+      }
     } else {
       const err = await res.json().catch(() => ({}))
-      errors.push(`${lead.email}: ${JSON.stringify(err).slice(0, 120)}`)
-      await supabase.from('outbound_leads').update({ status: 'failed', error: JSON.stringify(err).slice(0, 150) }).eq('id', lead.id)
+      errors.push(`${recipient}: ${JSON.stringify(err).slice(0, 120)}`)
+      if (!testTo) {
+        await supabase.from('outbound_leads').update({ status: 'failed', error: JSON.stringify(err).slice(0, 150) }).eq('id', lead.id)
+      }
     }
   }
 
