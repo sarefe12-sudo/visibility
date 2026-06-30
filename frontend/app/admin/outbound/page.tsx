@@ -44,13 +44,15 @@ const DEFAULT_SUBJECT = `{{brand}} scored {{score}}/100 on AI visibility`
 
 const DEFAULT_BODY = `Hi {{first_name}},
 
-I ran {{brand}} through the 6 major AI models — Claude, GPT-4o, Gemini, Perplexity, Grok and DeepSeek — to see how they describe your brand when someone asks for recommendations.
+I checked how the two most-used AI assistants — Claude and ChatGPT — describe {{brand}} when someone asks them for recommendations in your space.
 
-Your overall AI visibility score came back at {{score}}/100. The weakest spot was {{worst_model}} at {{worst_score}}/100 — which means when buyers ask that model for options in your space, you're often left out.
+Your AI visibility score came back at {{score}}/100. The weaker of the two was {{worst_model}} at {{worst_score}}/100 — meaning when buyers ask it for options, {{brand}} often doesn't come up.
 
 The good news: this is fixable. A quick win we'd suggest is {{recommendation}}.
 
-I put together the full per-model breakdown (and how you compare to competitors). Want to see it?`
+This is just Claude and ChatGPT. To see how you score across all 6 major models — Gemini, Perplexity, Grok and DeepSeek included — plus your competitor comparison and a per-model fix-it playbook, that's on our Pro plan.
+
+Want me to send over your full report?`
 
 function StatCard({ label, value, accent }: { label: string; value: number; accent?: string }) {
   return (
@@ -109,10 +111,10 @@ export default function OutboundPage() {
     setBusy('audit')
     const ids = selectedIds()
     let done = 0
-    // Each audit fans out across 6 models (~4 min) → backend processes one lead
-    // per request. Loop through the selection until it's drained.
+    // Each audit runs Claude + GPT-4o (~90s) → backend processes one lead per
+    // request. Loop through the selection until it's drained.
     for (const id of ids) {
-      flash(`Auditing ${done + 1}/${ids.length}… (~4 min each)`)
+      flash(`Auditing ${done + 1}/${ids.length}… (~90s each)`)
       const r = await fetch('/api/admin/outbound/audit', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: [id] }),

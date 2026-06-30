@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 const ADMIN_EMAIL = 'sarefe12@gmail.com'
 const RAILWAY_URL = 'https://zealous-perception-production-2d31.up.railway.app'
 
-export const maxDuration = 300 // 5 minutes — one audit fans out across 6 models (~4 min)
+export const maxDuration = 300 // 5 min budget — one audit runs Claude + GPT-4o (~90s)
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,11 +66,13 @@ async function auditOne(lead: Lead) {
       return
     }
 
-    // Step 2 — run the analysis across all 6 models (tier agency → richest pitch)
+    // Step 2 — run the analysis on the 2 free-tier models only (Claude + GPT-4o).
+    // The cold-audit pitch teases these two; the other 4 models are the Pro upsell.
+    // Bonus: 2 models instead of 6 → ~3x faster, well under the function budget.
     const res = await fetch(`${RAILWAY_URL}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand, competitors: [], prompts, tier: 'agency' }),
+      body: JSON.stringify({ brand, competitors: [], prompts, tier: 'free' }),
     })
 
     if (!res.ok) {
