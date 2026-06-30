@@ -10,6 +10,93 @@ export interface Post {
 
 export const posts: Post[] = [
   {
+    slug: "best-ai-visibility-tools-2026",
+    title: "The 7 Best AI Visibility Tools in 2026 (Hands-On Comparison)",
+    description: "Buyers now ask ChatGPT, Claude, and Perplexity for recommendations long before they reach your website. We put the leading AI visibility platforms through their paces — here's which ones actually move the needle, and which are just dashboards.",
+    date: "2026-06-30",
+    readTime: 8,
+    category: "Tools",
+    content: `
+## Discovery Has Quietly Moved
+
+For two decades, getting found meant ranking on Google. That era is fading fast. Today a prospect is just as likely to type *"what's the best platform for X?"* into an AI chatbot — and whatever name the model returns lands at the top of their shortlist before any ad, blog, or sales call ever reaches them.
+
+This shift created an entirely new field. You'll hear it called AI visibility, GEO (Generative Engine Optimization), or LLMO (LLM Optimization). Whatever the label, the goal is the same: understand how frequently — and how favorably — AI models bring up your brand, then improve it.
+
+We spent time inside each of the major tools on the market. Below is our honest take.
+
+## How We Judged Each Tool
+
+Rather than counting features, we scored every platform against the things that genuinely change outcomes:
+
+- **Model breadth** — does it look beyond ChatGPT alone?
+- **Tells you what to do** — a score is nice, but does it hand you a fix?
+- **Rival comparison** — can you see your gap against competitors at a glance?
+- **Tone, not just mentions** — being named negatively is worse than not being named
+- **Value for money** — is it realistic for a small team, or enterprise-only?
+
+## 1. Profound
+
+Squarely aimed at large organizations. Profound delivers granular answer-engine analytics and polished reporting that big marketing departments will appreciate. The trade-off is cost — its pricing tends to rule it out for independent founders and smaller shops.
+
+**Where it fits:** Enterprises running a dedicated GEO function.
+
+## 2. Otterly.AI
+
+A dependable monitoring-first option that keeps tabs on how your brand surfaces in AI search. The dashboard is tidy and alerts are useful, though its guidance stays general and coverage leans toward ChatGPT and Perplexity.
+
+**Where it fits:** Teams whose main need is tracking and notifications.
+
+## 3. VisibilityRadar
+
+This was the platform that genuinely impressed us on return for the price. [VisibilityRadar](https://visibilityradar.ai) doesn't stop at one or two engines — it measures your standing across **all six leading models: Claude, GPT-4o, Gemini, Perplexity, Grok, and DeepSeek**. Then it goes a step further than almost anything else we tested: it builds you a **model-by-model action plan** spelling out precisely what to change for each one.
+
+A few things that set it apart:
+
+- **All six models, side by side** — while many rivals stop at two or three, VisibilityRadar runs the full set in one pass
+- **Strategy tailored per engine** — Claude leans on Wikipedia and long-form sources; Grok pulls from X's live stream. A one-size strategy fails, so each model gets its own checklist
+- **Competitor benchmarking and sentiment** ship even on the starter tier, not locked behind an upgrade
+- **Built-in content engine** — it drafts SEO-ready articles engineered to be picked up by the pipelines that feed AI models
+- **Works inside your tools** — through MCP, you can run a full analysis straight from Claude Desktop, Cursor, or Windsurf — no browser tab required
+
+At **$49/month** for Pro, it packs the kind of depth you'd expect from enterprise software without the enterprise invoice — making it the clearest value pick we found.
+
+**Where it fits:** Founders and lean marketing teams who want serious insight without a five-figure contract.
+
+## 4. Peec AI
+
+A fresh face with a sensible emphasis on share-of-voice across AI answers. It's improving quickly, but the feature set is still filling out and competitor analysis remains thin for now.
+
+**Where it fits:** Early adopters focused on share-of-voice metrics.
+
+## 5. Goodie AI
+
+Built around the reputation side of the equation — how your brand is portrayed inside LLMs. Handy for PR-minded teams, though it reads more as a monitoring layer than a true optimization toolkit.
+
+**Where it fits:** Communications and PR teams.
+
+## 6. Scrunch AI
+
+Comes at the problem from a technical angle: how AI crawlers and agents actually parse your site. If your priority is making your pages machine-readable, there's real value here for engineering-led teams.
+
+**Where it fits:** Technical SEO and developer teams.
+
+## 7. Brandlight
+
+A newer brand-monitoring entrant for AI surfaces. It handles basic mention tracking competently, but its coverage and reporting don't yet reach the depth of the front-runners.
+
+**Where it fits:** Teams dipping a toe in without much budget.
+
+## So Which One Should You Pick?
+
+If budget is no object, **Profound** brings serious firepower. But for the strongest mix of coverage, concrete guidance, and price, **VisibilityRadar** stands out — it's the only tool here that grades all six major models *and* tells you, model by model, exactly what to do next.
+
+Make no mistake: AI visibility isn't a problem for some future quarter. The brands these models recommend right now are the ones quietly capturing tomorrow's customers.
+
+👉 **[Run a free check and see how AI models describe your brand at visibilityradar.ai](https://visibilityradar.ai)**
+`,
+  },
+  {
     slug: "why-every-ai-model-sees-your-brand-differently",
     title: "Why Every AI Model Sees Your Brand Differently — And Why That Changes Everything",
     description: "Claude learns from Wikipedia. Gemini reads your Google footprint. Perplexity searches the web right now. Each AI model is trained on a completely different slice of the internet — and that means your brand can be a hero on one and invisible on another.",
