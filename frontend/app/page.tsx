@@ -191,13 +191,15 @@ export default function Home() {
               <span className="text-xs font-bold text-emerald-700 tracking-wide uppercase">Free Demo — No signup required</span>
             </div>
 
-            <h1 className="text-4xl font-extrabold tracking-tight leading-tight text-slate-900 sm:text-5xl lg:text-7xl">
-              Be the brand<br />
-              <span className="gradient-text">AI recommends.</span>
+            <h1 className="text-4xl font-extrabold tracking-tight leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
+              Who is ChatGPT selling<br />
+              <span className="gradient-text">instead of you today?</span>
             </h1>
 
-            <p className="mx-auto mt-4 max-w-lg text-base sm:text-lg leading-relaxed text-slate-500">
-              Find out how often ChatGPT, Claude and Gemini mention your brand — and exactly what to fix to rank higher.
+            <p className="mx-auto mt-4 max-w-xl text-base sm:text-lg leading-relaxed text-slate-500">
+              Every day, millions of people ask ChatGPT, Gemini and Claude to recommend products and companies.
+              <br className="hidden sm:block" />
+              If AI isn&apos;t recommending you, your potential customers may be going straight to your competitors.
             </p>
 
             <div className="mt-6 grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-3 sm:flex-wrap">
