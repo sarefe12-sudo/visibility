@@ -19,6 +19,7 @@ const nav = [
   { href: '/admin/subscriptions', label: 'Subscriptions',  icon: '💳' },
   { href: '/admin/retention',     label: 'Retention',      icon: '🔄' },
   { href: '/admin/leads',         label: 'Leads',          icon: '🎯' },
+  { href: '/admin/outbound',      label: 'Outbound',       icon: '🚀' },
   { href: '/admin/contacts',      label: 'Contacts',       icon: '✉️' },
   { href: '/admin/audit',         label: 'Audit Logs',     icon: '📋' },
   { href: '/admin/health',        label: 'System Health',  icon: '❤️' },
