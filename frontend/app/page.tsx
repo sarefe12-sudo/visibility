@@ -155,6 +155,20 @@ export default function Home() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: email.trim(), action: "record" }),
           }).catch(() => {});
+
+          // Capture the lead + email the report (fire-and-forget)
+          fetch("/api/send-report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: email.trim(),
+              brand: data.brand,
+              overall_score: data.overall_score,
+              market,
+              model_scores: data.model_scores,
+              recommendations: [],
+            }),
+          }).catch(() => {});
         }
       }
     } catch (e: unknown) { setError(e instanceof Error ? e.message : "Unknown error"); }
