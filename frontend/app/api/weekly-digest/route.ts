@@ -1,5 +1,8 @@
+import { currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+
+const ADMIN_EMAIL = 'sarefe12@gmail.com'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -88,11 +91,16 @@ function buildDigestHtml(params: {
 
 // GET /api/weekly-digest — called by Vercel Cron every Monday 07:00 UTC.
 // Vercel Cron always issues GET requests with an Authorization: Bearer <CRON_SECRET> header.
+// Also callable manually from the admin panel (Clerk admin session).
 export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const isCron = !cronSecret || authHeader === `Bearer ${cronSecret}`
+
+  if (!isCron) {
+    const user = await currentUser()
+    const email = user?.emailAddresses?.[0]?.emailAddress
+    if (email !== ADMIN_EMAIL) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const apiKey = process.env.RESEND_API_KEY

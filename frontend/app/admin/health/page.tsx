@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from 'react'
 
+type ReportKey = 'monthly-report' | 'weekly-digest'
+
 export default function HealthPage() {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'ok' | 'error'>('checking')
   const [models, setModels] = useState<string[]>([])
+  const [sending, setSending] = useState<ReportKey | null>(null)
+  const [result, setResult] = useState<{ key: ReportKey; ok: boolean; message: string } | null>(null)
 
   useEffect(() => {
     fetch('https://zealous-perception-production-2d31.up.railway.app/models')
@@ -12,6 +16,23 @@ export default function HealthPage() {
       .then(d => { setBackendStatus('ok'); setModels(d.active_models ?? []) })
       .catch(() => setBackendStatus('error'))
   }, [])
+
+  const sendReport = async (key: ReportKey) => {
+    setSending(key); setResult(null)
+    try {
+      const r = await fetch(`/api/${key}`)
+      const d = await r.json()
+      if (r.ok) {
+        setResult({ key, ok: true, message: `Sent ${d.sent ?? 0}${d.errors?.length ? ` · ${d.errors.length} failed` : ''}` })
+      } else {
+        setResult({ key, ok: false, message: d.error ?? `HTTP ${r.status}` })
+      }
+    } catch (e) {
+      setResult({ key, ok: false, message: String(e) })
+    } finally {
+      setSending(null)
+    }
+  }
 
   const StatusDot = ({ ok }: { ok: boolean }) => (
     <span className={`inline-block w-2 h-2 rounded-full mr-2 ${ok ? 'bg-emerald-500' : 'bg-red-500'}`} />
@@ -76,6 +97,33 @@ export default function HealthPage() {
               <code className="text-slate-300 text-xs">G-QTY92863Z3</code>
             </div>
           </div>
+        </div>
+
+        {/* Manual report triggers */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 col-span-2">
+          <h2 className="text-sm font-semibold text-slate-300 mb-1">Email Reports</h2>
+          <p className="text-slate-500 text-xs mb-4">Normally sent by Vercel Cron. Use these to send on demand — e.g. if a scheduled run was missed.</p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => sendReport('monthly-report')}
+              disabled={sending !== null}
+              className="rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm px-4 py-2 transition-colors"
+            >
+              {sending === 'monthly-report' ? 'Sending…' : 'Send monthly report now'}
+            </button>
+            <button
+              onClick={() => sendReport('weekly-digest')}
+              disabled={sending !== null}
+              className="rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm px-4 py-2 transition-colors"
+            >
+              {sending === 'weekly-digest' ? 'Sending…' : 'Send weekly digest now'}
+            </button>
+          </div>
+          {result && (
+            <p className={`mt-3 text-xs ${result.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+              {result.key === 'monthly-report' ? 'Monthly report' : 'Weekly digest'}: {result.message}
+            </p>
+          )}
         </div>
       </div>
     </div>
