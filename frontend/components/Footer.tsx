@@ -84,8 +84,12 @@ export default function Footer() {
               {[
                 "6 AI Model Scoring",
                 "Per-Model Strategy Playbook",
+                "AI Growth Kit (FAQ, Schema, PR, LinkedIn)",
+                "AI Content Studio",
                 "Competitor Comparison",
                 "Sentiment Analysis",
+                "Site AI-Readiness Audit",
+                "MCP API (Claude Desktop, Cursor)",
                 "Month-over-Month Tracking",
                 "PDF Report Export",
               ].map((f) => (
@@ -106,10 +110,12 @@ export default function Footer() {
               <p className="text-xs font-bold text-violet-800 mb-2">Each AI learns differently</p>
               <ul className="space-y-1.5">
                 {[
-                  { model: "Claude",     tip: "Wikipedia & long-form", color: "#d97757" },
-                  { model: "Gemini",     tip: "Google ecosystem",      color: "#4285f4" },
-                  { model: "Perplexity", tip: "Real-time web search",  color: "#20b2aa" },
-                  { model: "Grok",       tip: "X/Twitter live feed",   color: "#a78bfa" },
+                  { model: "Claude",     tip: "Wikipedia & long-form",   color: "#d97757" },
+                  { model: "GPT-4o",     tip: "Broad web & news",        color: "#10a37f" },
+                  { model: "Gemini",     tip: "Google ecosystem",        color: "#4285f4" },
+                  { model: "Perplexity", tip: "Real-time web search",    color: "#20b2aa" },
+                  { model: "Grok",       tip: "X/Twitter live feed",     color: "#a78bfa" },
+                  { model: "DeepSeek",   tip: "Technical & code content", color: "#4d6bfe" },
                 ].map((m) => (
                   <li key={m.model} className="flex items-center gap-2 text-[11px] text-slate-600">
                     <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
