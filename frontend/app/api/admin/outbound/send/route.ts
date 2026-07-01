@@ -134,6 +134,9 @@ export async function POST(req: Request) {
 
     if (res.ok) {
       sent++
+      const okData = await res.json().catch(() => ({}))
+      const resultNote = `${testTo ? 'TEST' : 'sent'} → ${recipient} · Resend id ${okData?.id ?? 'ok'} · ${new Date().toISOString()}`
+      // Record the send outcome on the row (visible even in test mode).
       // In test mode, don't advance the real lead through the funnel.
       if (!testTo) {
         await supabase.from('outbound_leads').update({
@@ -141,13 +144,19 @@ export async function POST(req: Request) {
           email_subject: renderedSubject,
           email_sent_at: new Date().toISOString(),
           error: null,
+          last_send_result: resultNote,
         }).eq('id', lead.id)
+      } else {
+        await supabase.from('outbound_leads').update({ last_send_result: resultNote }).eq('id', lead.id)
       }
     } else {
       const err = await res.json().catch(() => ({}))
+      const errNote = `FAILED → ${recipient} · ${JSON.stringify(err).slice(0, 160)}`
       errors.push(`${recipient}: ${JSON.stringify(err).slice(0, 120)}`)
       if (!testTo) {
-        await supabase.from('outbound_leads').update({ status: 'failed', error: JSON.stringify(err).slice(0, 150) }).eq('id', lead.id)
+        await supabase.from('outbound_leads').update({ status: 'failed', error: JSON.stringify(err).slice(0, 150), last_send_result: errNote }).eq('id', lead.id)
+      } else {
+        await supabase.from('outbound_leads').update({ last_send_result: errNote }).eq('id', lead.id)
       }
     }
   }

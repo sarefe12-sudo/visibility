@@ -17,6 +17,7 @@ interface Lead {
   worst_score: number | null
   top_recommendation: string | null
   competitor_scores: { name: string; score: number }[] | null
+  last_send_result: string | null
   email_sent_at: string | null
   opened_at: string | null
   clicked_at: string | null
@@ -247,6 +248,9 @@ export default function OutboundPage() {
                   <div className="text-slate-200 font-medium">{l.name ?? l.email}</div>
                   <div className="text-slate-500 text-xs">{l.title ? `${l.title} · ` : ''}{l.email}</div>
                   {l.error && <div className="text-red-400/70 text-xs mt-0.5">⚠ {l.error}</div>}
+                  {l.last_send_result && (
+                    <div className={`text-[10px] mt-0.5 ${l.last_send_result.startsWith('FAILED') ? 'text-red-400/70' : 'text-emerald-400/70'}`}>{l.last_send_result}</div>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-slate-400">{l.brand ?? l.company ?? '—'}</td>
                 <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${STATUS_STYLE[l.status] ?? 'bg-slate-800 text-slate-400'}`}>{l.status}</span></td>
