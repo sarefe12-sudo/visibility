@@ -261,7 +261,15 @@ export default function OutboundPage() {
                     <div className="text-slate-600 mt-1">vs {l.competitor_scores.slice(0, 3).map(c => `${c.name} ${Math.round(c.score)}`).join(' · ')}</div>
                   )}
                 </td>
-                <td className="px-4 py-3 text-slate-500 text-xs">{l.email_sent_at ? new Date(l.email_sent_at).toLocaleDateString() : '—'}</td>
+                <td className="px-4 py-3 text-xs">
+                  <div className="text-slate-500">{l.email_sent_at ? new Date(l.email_sent_at).toLocaleDateString() : '—'}</div>
+                  {(l.opened_at || l.clicked_at) && (
+                    <div className="flex gap-1 mt-1">
+                      {l.opened_at && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400" title={new Date(l.opened_at).toLocaleString()}>opened</span>}
+                      {l.clicked_at && <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-400" title={new Date(l.clicked_at).toLocaleString()}>clicked</span>}
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

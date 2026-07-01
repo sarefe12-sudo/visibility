@@ -35,9 +35,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       .single()
 
     if (lead && ['emailed', 'opened'].includes(lead.status)) {
+      // Real send → advance the funnel status + timestamp
       await supabase
         .from('outbound_leads')
         .update({ status: 'clicked', clicked_at: new Date().toISOString() })
+        .eq('id', id)
+    } else if (lead && !lead.clicked_at) {
+      // Test send (status still audited) → record the click timestamp only,
+      // without advancing the real funnel status
+      await supabase
+        .from('outbound_leads')
+        .update({ clicked_at: new Date().toISOString() })
         .eq('id', id)
     }
   } catch {
