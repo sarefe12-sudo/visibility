@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/analyze", "/dashboard", "/profile", "/api/"],
+        disallow: ["/analyze", "/dashboard", "/profile", "/api/", "/pricing"],
       },
     ],
     sitemap: "https://visibilityradar.ai/sitemap.xml",
