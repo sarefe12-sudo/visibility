@@ -1,8 +1,13 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { reanalyzeBrand } from '@/lib/reanalyze'
+
+export const maxDuration = 300 // each brand re-run hits live AI models — budget generously
 
 const ADMIN_EMAIL = 'sarefe12@gmail.com'
+// Cap brands re-analyzed per user so the job stays within the function time budget.
+const MAX_BRANDS_PER_USER = 5
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -120,45 +125,70 @@ export async function GET(req: Request) {
 
   for (const pref of prefs) {
     try {
-      // Get user name
+      // Get user name + tier (tier determines how many models the re-run covers)
       const { data: user } = await supabase
         .from('users')
-        .select('name, email')
+        .select('name, email, tier')
         .eq('id', pref.user_id)
         .single()
 
-      // Get last 2 analyses per brand for this user (last 14 days)
-      const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
-      const { data: analyses } = await supabase
+      if (!user || user.tier === 'free') continue
+
+      // Find this user's tracked brands: the latest analysis per brand, most
+      // recently touched first, capped so the re-run job stays time-bounded.
+      const { data: recentAnalyses } = await supabase
         .from('analyses')
-        .select('id, brand, overall_score, active_models, result_snapshot, created_at')
+        .select('id, brand, market, overall_score, result_snapshot, created_at')
         .eq('user_id', pref.user_id)
-        .gte('created_at', since)
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(50)
 
-      if (!analyses || analyses.length === 0) continue
+      if (!recentAnalyses || recentAnalyses.length === 0) continue
 
-      // Group by brand: take latest + one before
-      const byBrand = new Map<string, typeof analyses>()
-      for (const a of analyses) {
+      const seenBrands = new Set<string>()
+      const trackedBrands: typeof recentAnalyses = []
+      for (const a of recentAnalyses) {
         const key = a.brand.toLowerCase().trim()
-        if (!byBrand.has(key)) byBrand.set(key, [])
-        byBrand.get(key)!.push(a)
+        if (seenBrands.has(key)) continue
+        seenBrands.add(key)
+        trackedBrands.push(a)
+        if (trackedBrands.length >= MAX_BRANDS_PER_USER) break
       }
 
       const digestItems = []
-      for (const [, brandAnalyses] of byBrand) {
-        const latest = brandAnalyses[0]
-        const prev = brandAnalyses[1]
+      for (const prevAnalysis of trackedBrands) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const snapshot = latest.result_snapshot as any
+        const prevSnapshot = prevAnalysis.result_snapshot as any
+        const competitors: string[] = Object.keys(prevSnapshot?.competitor_scores ?? {})
+
+        // Re-run the analysis live so the digest reflects *current* visibility,
+        // not a replay of the last stored snapshot.
+        const fresh = await reanalyzeBrand({
+          brand: prevAnalysis.brand,
+          market: prevAnalysis.market ?? 'global',
+          competitors,
+          tier: user.tier,
+        })
+        if (!fresh) continue
+
+        await supabase.from('analyses').insert({
+          user_id: pref.user_id,
+          brand: prevAnalysis.brand,
+          market: prevAnalysis.market ?? 'global',
+          overall_score: fresh.overall_score,
+          active_models: fresh.active_models,
+          competitor_count: competitors.length,
+          prompt_count: Object.keys(fresh.model_scores ?? {}).length,
+          result_snapshot: fresh,
+          source: 'weekly_digest_auto',
+        })
+
         digestItems.push({
-          brand: latest.brand,
-          score: latest.overall_score,
-          prevScore: prev?.overall_score,
-          modelScores: snapshot?.model_scores ?? {},
-          date: latest.created_at,
+          brand: prevAnalysis.brand,
+          score: fresh.overall_score,
+          prevScore: prevAnalysis.overall_score,
+          modelScores: fresh.model_scores ?? {},
+          date: new Date().toISOString(),
         })
       }
 
