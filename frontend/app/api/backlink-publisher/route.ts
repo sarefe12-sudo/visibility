@@ -196,14 +196,14 @@ async function publishToHashnode(topic: typeof TOPICS[0], content: string): Prom
   return data?.data?.publishPost?.post?.url ?? null
 }
 
-// POST /api/backlink-publisher — Vercel Cron triggers this daily at 09:00 UTC
-export async function POST(req: Request) {
+function cronDenied(req: Request): boolean {
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  return !!cronSecret && authHeader !== `Bearer ${cronSecret}`
+}
 
+// The actual publishing work — shared by the cron (GET ?cron=1) and manual POST.
+async function runPublish() {
   try {
     // Pick a fresh topic
     const recentTitles = await getLastPublishedTopics()
@@ -240,8 +240,20 @@ export async function POST(req: Request) {
   }
 }
 
-// GET — show recent publications (admin use)
-export async function GET() {
+// Manual trigger (admin)
+export async function POST(req: Request) {
+  if (cronDenied(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  return runPublish()
+}
+
+// GET — Vercel Cron hits this daily at 09:00 UTC with ?cron=1 (Vercel Cron always uses GET).
+// Without ?cron=1 it returns recent publications for the admin view.
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  if (searchParams.get('cron') === '1') {
+    if (cronDenied(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return runPublish()
+  }
   const { data } = await supabase
     .from('backlink_publications')
     .select('*')

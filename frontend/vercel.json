@@ -9,7 +9,7 @@
       "schedule": "0 7 * * 1"
     },
     {
-      "path": "/api/backlink-publisher",
+      "path": "/api/backlink-publisher?cron=1",
       "schedule": "0 9 * * *"
     }
   ]
