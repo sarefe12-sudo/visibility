@@ -9,8 +9,10 @@ const supabase = createClient(
 // Called by Vercel Cron on 1st of each month at 08:00 UTC
 // Vercel cron.json: { "crons": [{ "path": "/api/monthly-report", "schedule": "0 8 1 * *" }] }
 export async function GET(req: Request) {
-  const secret = req.headers.get('x-cron-secret')
-  if (secret !== process.env.CRON_SECRET) {
+  // Vercel Cron issues GET with an Authorization: Bearer <CRON_SECRET> header.
+  const authHeader = req.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

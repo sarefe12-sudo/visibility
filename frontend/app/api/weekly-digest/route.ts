@@ -86,9 +86,9 @@ function buildDigestHtml(params: {
 </html>`
 }
 
-// POST /api/weekly-digest — called by Vercel Cron every Monday 07:00 UTC
-// Also callable manually by admin
-export async function POST(req: Request) {
+// GET /api/weekly-digest — called by Vercel Cron every Monday 07:00 UTC.
+// Vercel Cron always issues GET requests with an Authorization: Bearer <CRON_SECRET> header.
+export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
@@ -181,9 +181,4 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ sent, errors, total: prefs.length })
-}
-
-// GET — admin trigger check
-export async function GET() {
-  return NextResponse.json({ message: 'Use POST to trigger the weekly digest' })
 }
