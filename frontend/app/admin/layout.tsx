@@ -13,6 +13,7 @@ const ADMIN_EMAIL = 'sarefe12@gmail.com'
 const nav = [
   { href: '/admin/dashboard',     label: 'Dashboard',      icon: '▦' },
   { href: '/admin/users',         label: 'Users',          icon: '👥' },
+  { href: '/admin/analyses',      label: 'Analyses',       icon: '📈' },
   { href: '/admin/analytics',     label: 'Analytics',      icon: '📊' },
   { href: '/admin/seo',           label: 'SEO / Search',   icon: '🔍' },
   { href: '/admin/tokens',        label: 'Token & Cost',   icon: '⚡' },
