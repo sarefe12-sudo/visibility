@@ -20,6 +20,7 @@ const PLANS = [
     price: "$0",
     period: "",
     variantId: null,
+    polarProductId: undefined as string | undefined,
     tier: "free",
     badge: null,
     highlight: false,
@@ -45,6 +46,7 @@ const PLANS = [
     originalPrice: "$99",
     period: "/month",
     variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID,
+    polarProductId: process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID,
     tier: "pro",
     badge: "Most Popular",
     highlight: true,
@@ -70,6 +72,7 @@ const PLANS = [
     price: "$599",
     period: "/month",
     variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_AGENCY_VARIANT_ID,
+    polarProductId: process.env.NEXT_PUBLIC_POLAR_AGENCY_PRODUCT_ID,
     tier: "agency",
     badge: "For Agencies",
     highlight: false,
@@ -164,7 +167,10 @@ export default function PricingPage() {
   const router = useRouter();
 
   async function handleCta(plan: typeof PLANS[0]) {
-    if (!plan.variantId) {
+    // Prefer Polar once its product IDs are configured; otherwise fall back
+    // to LemonSqueezy so existing env setups keep working during migration.
+    const usePolar = !!plan.polarProductId;
+    if (!plan.variantId && !plan.polarProductId) {
       router.push(isSignedIn ? "/analyze" : "/sign-up");
       return;
     }
@@ -173,10 +179,10 @@ export default function PricingPage() {
       return;
     }
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch(usePolar ? "/api/polar/checkout" : "/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId: plan.variantId }),
+        body: JSON.stringify(usePolar ? { productId: plan.polarProductId } : { variantId: plan.variantId }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;

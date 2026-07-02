@@ -1,6 +1,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { polar } from '@/lib/polar'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,15 +20,21 @@ export async function POST(req: Request) {
 
   const { data: user } = await supabase
     .from('users')
-    .select('id, tier, email, lemon_subscription_id')
+    .select('id, tier, email, lemon_subscription_id, payment_provider, polar_subscription_id')
     .eq('clerk_id', userId)
     .single()
 
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
   if (user.tier === 'free') return NextResponse.json({ error: 'No active subscription' }, { status: 400 })
 
-  // Cancel on LemonSqueezy if we have a subscription ID
-  if (user.lemon_subscription_id) {
+  if (user.payment_provider === 'polar' && user.polar_subscription_id) {
+    try {
+      await polar.subscriptions.revoke(user.polar_subscription_id)
+    } catch (e) {
+      console.error('[Polar] cancel error:', e)
+      // Don't block — still log locally
+    }
+  } else if (user.lemon_subscription_id) {
     try {
       const res = await fetch(
         `https://api.lemonsqueezy.com/v1/subscriptions/${user.lemon_subscription_id}`,
@@ -57,6 +64,7 @@ export async function POST(req: Request) {
     reason,
     custom_note: customNote ?? null,
     lemon_subscription_id: user.lemon_subscription_id ?? null,
+    polar_subscription_id: user.polar_subscription_id ?? null,
   })
 
   // Downgrade user to free
