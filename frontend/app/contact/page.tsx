@@ -147,19 +147,6 @@ export default function ContactPage() {
                 </div>
               </a>
 
-              <a
-                href="https://theresanaiforthat.com/ai/visibilityradar/?ref=featured&v=11549770"
-                target="_blank"
-                rel="nofollow"
-                className="flex justify-center pt-2"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  width={300}
-                  src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
-                  alt="Featured on There's An AI For That"
-                />
-              </a>
             </div>
 
             {/* Right — form */}
