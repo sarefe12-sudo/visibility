@@ -35,6 +35,10 @@ export async function generateStaticParams() {
   return getAllSlugs();
 }
 
+function coverUrl(title: string, category: string) {
+  return `/api/og/blog?title=${encodeURIComponent(title)}&category=${encodeURIComponent(category ?? "")}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPost(slug);
@@ -49,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: post.date,
       url: `https://visibilityradar.ai/blog/${slug}`,
-      images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+      images: [{ url: `https://visibilityradar.ai${coverUrl(post.title, post.category)}`, width: 1200, height: 630 }],
     },
   };
 }
@@ -158,7 +162,16 @@ export default async function PostPage({ params }: Props) {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-5">{post.title}</h1>
-          <p className="text-lg text-slate-500 leading-relaxed mb-10 border-b border-slate-100 pb-10">{post.description}</p>
+          <p className="text-lg text-slate-500 leading-relaxed mb-8">{post.description}</p>
+
+          <div className="rounded-2xl overflow-hidden mb-10 border border-slate-200 bg-slate-900">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverUrl(post.title, post.category)}
+              alt={post.title}
+              className="w-full h-auto"
+            />
+          </div>
 
           <div className="prose-content">
             {renderMarkdown(post.content)}

@@ -24,6 +24,10 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
+function coverUrl(title: string, category: string) {
+  return `/api/og/blog?title=${encodeURIComponent(title)}&category=${encodeURIComponent(category ?? "")}`;
+}
+
 async function getPosts() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,21 +78,31 @@ export default async function BlogPage() {
 
           {/* Featured post */}
           <Link href={`/blog/${featured.slug}`} className="block group">
-            <article className="rounded-2xl border border-slate-200 bg-white p-8 hover:border-indigo-200 hover:shadow-md transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${CATEGORY_COLOR[featured.category] ?? "bg-slate-50 text-slate-500"}`}>
-                  {featured.category}
-                </span>
-                <span className="text-xs text-slate-400">{formatDate(featured.date)}</span>
-                <span className="text-xs text-slate-400">· {featured.read_time} min read</span>
+            <article className="rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-indigo-200 hover:shadow-md transition-all">
+              <div className="aspect-[2/1] overflow-hidden bg-slate-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverUrl(featured.title, featured.category)}
+                  alt={featured.title}
+                  className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                />
               </div>
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-3 group-hover:text-indigo-700 transition-colors leading-tight">
-                {featured.title}
-              </h2>
-              <p className="text-slate-500 leading-relaxed mb-4">{featured.description}</p>
-              <span className="text-sm font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">
-                Read article →
-              </span>
+              <div className="p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${CATEGORY_COLOR[featured.category] ?? "bg-slate-50 text-slate-500"}`}>
+                    {featured.category}
+                  </span>
+                  <span className="text-xs text-slate-400">{formatDate(featured.date)}</span>
+                  <span className="text-xs text-slate-400">· {featured.read_time} min read</span>
+                </div>
+                <h2 className="text-2xl font-extrabold text-slate-900 mb-3 group-hover:text-indigo-700 transition-colors leading-tight">
+                  {featured.title}
+                </h2>
+                <p className="text-slate-500 leading-relaxed mb-4">{featured.description}</p>
+                <span className="text-sm font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">
+                  Read article →
+                </span>
+              </div>
             </article>
           </Link>
 
@@ -96,20 +110,31 @@ export default async function BlogPage() {
           <div className="grid gap-5 sm:grid-cols-2">
             {rest.map((post) => (
               <Link key={post.slug} href={`/blog/${post.slug}`} className="block group">
-                <article className="rounded-2xl border border-slate-200 bg-white p-6 hover:border-indigo-200 hover:shadow-sm transition-all h-full flex flex-col">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${CATEGORY_COLOR[post.category] ?? "bg-slate-50 text-slate-500"}`}>
-                      {post.category}
-                    </span>
-                    <span className="text-xs text-slate-400">{post.read_time} min</span>
+                <article className="rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-indigo-200 hover:shadow-sm transition-all h-full flex flex-col">
+                  <div className="aspect-[1.9/1] overflow-hidden bg-slate-900">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={coverUrl(post.title, post.category)}
+                      alt={post.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+                    />
                   </div>
-                  <h2 className="text-base font-bold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors leading-snug flex-1">
-                    {post.title}
-                  </h2>
-                  <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-4">{post.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">{formatDate(post.date)}</span>
-                    <span className="text-xs font-semibold text-indigo-600">Read →</span>
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${CATEGORY_COLOR[post.category] ?? "bg-slate-50 text-slate-500"}`}>
+                        {post.category}
+                      </span>
+                      <span className="text-xs text-slate-400">{post.read_time} min</span>
+                    </div>
+                    <h2 className="text-base font-bold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors leading-snug flex-1">
+                      {post.title}
+                    </h2>
+                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-4">{post.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">{formatDate(post.date)}</span>
+                      <span className="text-xs font-semibold text-indigo-600">Read →</span>
+                    </div>
                   </div>
                 </article>
               </Link>
