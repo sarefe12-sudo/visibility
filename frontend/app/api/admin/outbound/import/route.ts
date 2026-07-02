@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { fetchFromApollo, normalizeLeads, type LeadInput } from '@/lib/apolloImport'
 
+export const maxDuration = 280 // each result now needs a separate email-reveal call
+
 const ADMIN_EMAIL = 'sarefe12@gmail.com'
 
 const supabase = createClient(

@@ -44,49 +44,95 @@ export interface ApolloFilters {
   page?: number
 }
 
-// Fetch people from Apollo.io
-export async function fetchFromApollo(filters: ApolloFilters): Promise<{ leads: LeadInput[]; error?: string }> {
-  const apiKey = process.env.APOLLO_API_KEY
-  if (!apiKey) return { leads: [], error: 'APOLLO_API_KEY not set' }
+interface ApolloPerson {
+  id: string
+  first_name?: string
+  last_name?: string
+  title?: string
+  organization?: { name?: string; primary_domain?: string; website_url?: string; industry?: string }
+}
 
+// Step 1 — search (Apollo's current search endpoint no longer returns email
+// addresses; it only returns matching people + org info. As of the API's
+// 2026 revision the old /mixed_people/search endpoint is deprecated in favor
+// of this one).
+async function searchApollo(apiKey: string, filters: ApolloFilters): Promise<{ people: ApolloPerson[]; error?: string }> {
   const body: Record<string, unknown> = {
     page: filters.page ?? 1,
     per_page: Math.min(filters.perPage ?? 25, 100),
   }
   if (filters.titles?.length) body.person_titles = filters.titles
-  if (filters.industries?.length) body.q_organization_keyword_tags = filters.industries
+  // The new search endpoint doesn't expose an industry-tag filter — fold
+  // industry terms into the general keyword search instead.
+  if (filters.industries?.length) body.q_keywords = filters.industries.join(' ')
   if (filters.employeeRanges?.length) body.organization_num_employees_ranges = filters.employeeRanges
   if (filters.locations?.length) body.person_locations = filters.locations
 
-  const res = await fetch('https://api.apollo.io/api/v1/mixed_people/search', {
+  const res = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
-      'X-Api-Key': apiKey,
-    },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Api-Key': apiKey },
     body: JSON.stringify(body),
   })
 
   if (!res.ok) {
     const err = await res.text().catch(() => '')
-    return { leads: [], error: `Apollo error ${res.status}: ${err.slice(0, 200)}` }
+    return { people: [], error: `Apollo search ${res.status}: ${err.slice(0, 200)}` }
   }
+  const data = await res.json()
+  return { people: data.people ?? [] }
+}
+
+// Step 2 — reveal the email for one person. Apollo's search results no
+// longer include emails at all, so each candidate needs its own enrichment
+// call (each successful reveal consumes an Apollo credit).
+async function enrichPerson(apiKey: string, person: ApolloPerson): Promise<LeadInput | null> {
+  const org = person.organization ?? {}
+  const res = await fetch('https://api.apollo.io/api/v1/people/match', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Api-Key': apiKey },
+    body: JSON.stringify({
+      first_name: person.first_name,
+      last_name: person.last_name,
+      organization_name: org.name,
+      domain: org.primary_domain ?? org.website_url,
+      reveal_personal_emails: true,
+    }),
+  })
+  if (!res.ok) return null
 
   const data = await res.json()
-  const people = data.people ?? []
-  const leads: LeadInput[] = people.map((p: Record<string, unknown>) => {
-    const org = (p.organization ?? {}) as Record<string, unknown>
-    return {
-      email: (p.email as string) ?? '',
-      name: [p.first_name, p.last_name].filter(Boolean).join(' '),
-      title: p.title as string,
-      company: org.name as string,
-      domain: (org.primary_domain ?? org.website_url) as string,
-      industry: org.industry as string,
-      market: 'global',
-    }
-  })
+  // Defensive extraction — Apollo's documented response wraps the result in
+  // a "person" key; fall back to the raw object if that shape changes again.
+  const p = (data.person ?? data) as Record<string, unknown>
+  const email = p.email as string | undefined
+  if (!email) return null
+
+  const enrichedOrg = (p.organization ?? org) as Record<string, unknown>
+  return {
+    email,
+    name: [p.first_name ?? person.first_name, p.last_name ?? person.last_name].filter(Boolean).join(' '),
+    title: (p.title as string) ?? person.title,
+    company: (enrichedOrg.name as string) ?? org.name,
+    domain: ((enrichedOrg.primary_domain ?? enrichedOrg.website_url) as string) ?? org.primary_domain ?? org.website_url,
+    industry: (enrichedOrg.industry as string) ?? org.industry,
+    market: 'global',
+  }
+}
+
+// Fetch + enrich people from Apollo.io (search, then reveal each email).
+export async function fetchFromApollo(filters: ApolloFilters): Promise<{ leads: LeadInput[]; error?: string }> {
+  const apiKey = process.env.APOLLO_API_KEY
+  if (!apiKey) return { leads: [], error: 'APOLLO_API_KEY not set' }
+
+  const { people, error } = await searchApollo(apiKey, filters)
+  if (error) return { leads: [], error }
+  if (people.length === 0) return { leads: [] }
+
+  const leads: LeadInput[] = []
+  for (const person of people) {
+    const lead = await enrichPerson(apiKey, person)
+    if (lead) leads.push(lead)
+  }
 
   return { leads }
 }

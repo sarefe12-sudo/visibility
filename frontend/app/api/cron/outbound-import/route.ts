@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { fetchFromApollo, normalizeLeads, ICP_SEGMENTS } from '@/lib/apolloImport'
 
-export const maxDuration = 60
+export const maxDuration = 280 // each result now needs a separate email-reveal call
 
 // Daily import volume, split across the two ICP segments. Sized to comfortably
 // feed the 20/day send cap (accounting for audit/content-check attrition)
