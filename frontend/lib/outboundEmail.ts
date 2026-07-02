@@ -152,6 +152,14 @@ Respond with ONLY a JSON object and nothing else: {"ok": true} if this email is 
 export function buildOutboundHtml(bodyText: string, leadId: string): string {
   const cta = `${APP_URL}/api/track/c/${leadId}?u=${encodeURIComponent(APP_URL + '/?utm_source=outreach&utm_medium=email')}`
   const pixel = `${APP_URL}/api/track/o/${leadId}.png`
+  const unsubscribe = `${APP_URL}/api/track/u/${leadId}`
+
+  // CAN-SPAM (US) / PECR-adjacent (UK, CA) compliance for commercial cold
+  // email: a working one-click opt-out and a valid physical mailing address
+  // are both required. Set OUTBOUND_MAILING_ADDRESS in Vercel; without it we
+  // still ship the unsubscribe link (the more critical piece) but the
+  // address line is left blank rather than a fabricated one.
+  const mailingAddress = process.env.OUTBOUND_MAILING_ADDRESS
 
   const htmlBody = bodyText
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -165,6 +173,8 @@ export function buildOutboundHtml(bodyText: string, leadId: string): string {
     <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
     <p style="color:#94a3b8;font-size:12px;">VisibilityRadar · <a href="${APP_URL}" style="color:#6366f1;">visibilityradar.ai</a><br>
     See how AI models describe your brand across Claude, GPT-4o, Gemini, Perplexity, Grok &amp; DeepSeek.</p>
+    ${mailingAddress ? `<p style="color:#cbd5e1;font-size:11px;">${mailingAddress}</p>` : ''}
+    <p style="color:#cbd5e1;font-size:11px;">Don't want these emails? <a href="${unsubscribe}" style="color:#94a3b8;">Unsubscribe</a></p>
     <img src="${pixel}" width="1" height="1" style="display:none" alt="">
   </div>`
 }

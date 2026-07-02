@@ -115,9 +115,12 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   if (searchParams.get('cron') !== '1') return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  // Unlike the digest crons, this one spends real money (Apollo credits) and
+  // sends real cold email to real people — require CRON_SECRET to be
+  // explicitly configured rather than falling open when it's unset.
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

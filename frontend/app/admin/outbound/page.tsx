@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { renderOutboundTemplate, DEFAULT_SUBJECT, DEFAULT_BODY, type OutboundLead } from '@/lib/outboundEmail'
 
 interface Lead {
   id: string
@@ -17,6 +18,8 @@ interface Lead {
   worst_score: number | null
   top_recommendation: string | null
   competitor_scores: { name: string; score: number }[] | null
+  sample_query: string | null
+  email_subject: string | null
   last_send_result: string | null
   email_sent_at: string | null
   opened_at: string | null
@@ -40,36 +43,8 @@ const STATUS_STYLE: Record<string, string> = {
   signed_up: 'bg-emerald-500/15 text-emerald-400',
   converted: 'bg-emerald-500/25 text-emerald-300',
   failed: 'bg-red-500/15 text-red-400',
+  unsubscribed: 'bg-slate-700 text-slate-300',
 }
-
-const DEFAULT_SUBJECT = `{{brand}}: how to get recommended by ChatGPT in 30 days`
-
-const DEFAULT_BODY = `Hi {{first_name}},
-
-When someone asks ChatGPT or Claude "{{query}}", they get a recommendation on the spot — and right now, it often isn't {{brand}}.
-
-I ran {{brand}} through the AI models your buyers actually use. Here's where you stand:
-
-• Your AI visibility score: {{score}}/100
-• Competitors on the same questions: {{competitors}}
-
-The good news: this is very fixable. Based on your results, three changes would move the needle most over the next 30 days:
-
-1. Publish a structured FAQ that answers the exact questions people ask AI in your space
-2. Add schema markup so AI models can clearly identify who you are and what you offer
-3. Earn a few authoritative mentions (blog, press, LinkedIn) that AI models trust and cite
-
-Here's what makes VisibilityRadar different: it's not just a report. It's an AI Growth Copilot. With one click it generates the assets to actually make those changes for you:
-
-✓ An SEO blog post tailored to your visibility gaps
-✓ FAQ content built from the real questions buyers ask AI
-✓ Schema markup, ready to paste into your site
-✓ A press release draft
-✓ A LinkedIn post
-
-Make these changes and your odds of being the brand AI recommends for queries like "{{query}}" go up — and we track that score for you month over month.
-
-Want me to generate your growth kit for {{brand}}?`
 
 function StatCard({ label, value, accent }: { label: string; value: number; accent?: string }) {
   return (
@@ -92,6 +67,7 @@ export default function OutboundPage() {
 
   const [importOpen, setImportOpen] = useState(false)
   const [sendOpen, setSendOpen] = useState(false)
+  const [viewingLead, setViewingLead] = useState<Lead | null>(null)
 
   const load = useCallback(async () => {
     const r = await fetch('/api/admin/outbound')
@@ -197,7 +173,7 @@ export default function OutboundPage() {
         />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
           className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-500">
-          {['all','pending','audited','emailed','opened','clicked','signed_up','converted','failed'].map(s =>
+          {['all','pending','audited','emailed','opened','clicked','signed_up','converted','failed','unsubscribed'].map(s =>
             <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>)}
         </select>
       </div>
@@ -235,11 +211,14 @@ export default function OutboundPage() {
               <th className="px-4 py-3 text-left">Score</th>
               <th className="px-4 py-3 text-left">Weakest</th>
               <th className="px-4 py-3 text-left">Sent</th>
+              <th className="px-4 py-3 text-left">Opened</th>
+              <th className="px-4 py-3 text-left">Clicked</th>
+              <th className="px-4 py-3 text-left"></th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-12 text-center text-slate-600">No leads. Import some to get started.</td></tr>
+              <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-600">No leads. Import some to get started.</td></tr>
             )}
             {filtered.map(l => (
               <tr key={l.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
@@ -265,13 +244,26 @@ export default function OutboundPage() {
                     <div className="text-slate-600 mt-1">vs {l.competitor_scores.slice(0, 3).map(c => `${c.name} ${Math.round(c.score)}`).join(' · ')}</div>
                   )}
                 </td>
+                <td className="px-4 py-3 text-xs text-slate-500">
+                  {l.email_sent_at
+                    ? <span title={new Date(l.email_sent_at).toLocaleString()}>{new Date(l.email_sent_at).toLocaleDateString()}</span>
+                    : <span className="text-slate-600">Not sent</span>}
+                </td>
                 <td className="px-4 py-3 text-xs">
-                  <div className="text-slate-500">{l.email_sent_at ? new Date(l.email_sent_at).toLocaleDateString() : '—'}</div>
-                  {(l.opened_at || l.clicked_at) && (
-                    <div className="flex gap-1 mt-1">
-                      {l.opened_at && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400" title={new Date(l.opened_at).toLocaleString()}>opened</span>}
-                      {l.clicked_at && <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-400" title={new Date(l.clicked_at).toLocaleString()}>clicked</span>}
-                    </div>
+                  {l.opened_at
+                    ? <span className="text-amber-400" title={new Date(l.opened_at).toLocaleString()}>✓ Yes</span>
+                    : <span className="text-slate-600">{l.email_sent_at ? 'No' : '—'}</span>}
+                </td>
+                <td className="px-4 py-3 text-xs">
+                  {l.clicked_at
+                    ? <span className="text-violet-400" title={new Date(l.clicked_at).toLocaleString()}>✓ Yes</span>
+                    : <span className="text-slate-600">{l.email_sent_at ? 'No' : '—'}</span>}
+                </td>
+                <td className="px-4 py-3">
+                  {l.email_subject && (
+                    <button onClick={() => setViewingLead(l)} className="text-xs text-indigo-400 hover:text-indigo-300 whitespace-nowrap">
+                      View email
+                    </button>
                   )}
                 </td>
               </tr>
@@ -282,6 +274,49 @@ export default function OutboundPage() {
 
       {importOpen && <ImportModal onClose={() => setImportOpen(false)} onDone={(m) => { flash(m); load() }} />}
       {sendOpen && <SendModal count={selected.size} ids={selectedIds()} onClose={() => setSendOpen(false)} onDone={(m) => { setSendOpen(false); setSelected(new Set()); flash(m); load() }} />}
+      {viewingLead && <ViewEmailModal lead={viewingLead} onClose={() => setViewingLead(null)} />}
+    </div>
+  )
+}
+
+/* ---------- View Email Modal ---------- */
+// Reconstructs the exact content that was sent — the automated cron always
+// uses the same fixed template, so re-rendering it with the lead's stored
+// data reproduces the real email without needing to store a duplicate copy.
+function ViewEmailModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+  const asOutboundLead: OutboundLead = {
+    id: lead.id, email: lead.email, name: lead.name, brand: lead.brand, company: lead.company,
+    overall_score: lead.overall_score, worst_model: lead.worst_model, worst_score: lead.worst_score,
+    top_recommendation: lead.top_recommendation, competitor_scores: lead.competitor_scores,
+    sample_query: lead.sample_query,
+  }
+  const subject = lead.email_subject || renderOutboundTemplate(DEFAULT_SUBJECT, asOutboundLead)
+  const body = renderOutboundTemplate(DEFAULT_BODY, asOutboundLead)
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-white font-semibold">Email sent to {lead.email}</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-white">✕</button>
+        </div>
+        <p className="text-xs text-slate-500 mb-4">
+          {lead.email_sent_at ? `Sent ${new Date(lead.email_sent_at).toLocaleString()}` : 'Not sent yet'}
+          {lead.opened_at && <> · <span className="text-amber-400">Opened {new Date(lead.opened_at).toLocaleString()}</span></>}
+          {lead.clicked_at && <> · <span className="text-violet-400">Clicked {new Date(lead.clicked_at).toLocaleString()}</span></>}
+        </p>
+        <div className="mb-3">
+          <label className="text-xs text-slate-500 mb-1 block">Subject</label>
+          <div className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2">{subject}</div>
+        </div>
+        <div>
+          <label className="text-xs text-slate-500 mb-1 block">Body</label>
+          <div className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg p-3 whitespace-pre-wrap leading-relaxed">{body}</div>
+        </div>
+        <div className="flex justify-end mt-4">
+          <button onClick={onClose} className="text-slate-400 text-sm px-4 py-2 hover:text-white">Close</button>
+        </div>
+      </div>
     </div>
   )
 }
