@@ -27,8 +27,7 @@ When someone asks ChatGPT or Claude "{{query}}", they get a recommendation on th
 
 I ran {{brand}} through the AI models your buyers actually use. Here's where you stand:
 
-• Your AI visibility score: {{score}}/100
-• Competitors on the same questions: {{competitors}}
+• Your AI visibility score: {{score}}/100{{competitor_bullet}}
 
 The good news: this is very fixable. Based on your results, three changes would move the needle most over the next 30 days:
 
@@ -55,6 +54,17 @@ function formatCompetitors(comps: CompetitorScore[] | null): string {
   return comps.map(c => `${c.name} — ${Math.round(c.score)}/100`).join(', ')
 }
 
+// Only competitors that actually outscore the brand make a persuasive (and
+// honest) comparison. Niche brands often see every suggested competitor
+// score 0 in a free-tier audit — in that case the bullet is dropped rather
+// than shipping a comparison that undermines the email's own claim.
+function competitorBullet(lead: OutboundLead): string {
+  const brandScore = lead.overall_score ?? 0
+  const stronger = (lead.competitor_scores ?? []).filter(c => c.score > 0 && c.score > brandScore)
+  if (stronger.length === 0) return ''
+  return `\n• Competitors on the same questions: ${formatCompetitors(stronger)}`
+}
+
 function firstName(name: string | null): string {
   if (!name) return 'there'
   return name.trim().split(/\s+/)[0]
@@ -72,6 +82,7 @@ export function renderOutboundTemplate(template: string, lead: OutboundLead): st
     .replace(/\{\{\s*worst_model\s*\}\}/gi, lead.worst_model || 'one AI model')
     .replace(/\{\{\s*worst_score\s*\}\}/gi, lead.worst_score != null ? String(Math.round(lead.worst_score)) : '—')
     .replace(/\{\{\s*recommendation\s*\}\}/gi, (lead.top_recommendation || 'improving your AI visibility').replace(/\.+\s*$/, ''))
+    .replace(/\{\{\s*competitor_bullet\s*\}\}/gi, competitorBullet(lead))
     .replace(/\{\{\s*competitors\s*\}\}/gi, formatCompetitors(lead.competitor_scores))
     .replace(/\{\{\s*query\s*\}\}/gi, (lead.sample_query || 'the best option in your space').replace(/\?+\s*$/, ''))
 }
@@ -87,9 +98,8 @@ export function ruleCheckOutboundLead(lead: OutboundLead): ContentCheckResult {
     return { ok: false, reason: `Invalid overall_score: ${lead.overall_score}` }
   }
   if (!lead.worst_model) return { ok: false, reason: 'Missing worst_model — audit likely incomplete' }
-  if (!lead.competitor_scores || lead.competitor_scores.length === 0) {
-    return { ok: false, reason: 'No competitors found — email would use generic filler text' }
-  }
+  // Note: an empty/weak competitor list is no longer a hard failure — the
+  // template now omits the competitor bullet entirely in that case.
   if (!lead.sample_query || !lead.sample_query.trim()) return { ok: false, reason: 'Missing sample_query' }
   if (!/\S+@\S+\.\S+/.test(lead.email)) return { ok: false, reason: `Malformed email address: ${lead.email}` }
   return { ok: true }
@@ -117,6 +127,8 @@ Context data used to generate this email:
 - Overall AI visibility score: ${lead.overall_score}
 - Weakest model: ${lead.worst_model} (${lead.worst_score})
 - Competitors: ${competitorsStr || 'none'}
+
+Note: it is expected and intentional that the email omits any competitor comparison when no competitor outscores the brand (competitor scores of 0 are normal for niche brands in this audit). Do NOT fail the email for missing competitor mentions or for competitor data showing low/zero scores — only fail if the email TEXT itself contains something contradictory, broken, or embarrassing.
 
 --- EMAIL SUBJECT ---
 ${subject}
