@@ -76,6 +76,79 @@ export function renderOutboundTemplate(template: string, lead: OutboundLead): st
     .replace(/\{\{\s*query\s*\}\}/gi, (lead.sample_query || 'the best option in your space').replace(/\?+\s*$/, ''))
 }
 
+export interface ContentCheckResult { ok: boolean; reason?: string }
+
+// Fast, free sanity check — catches the common failure mode where the audit
+// came back thin and the template fell back to generic placeholder phrases
+// ("your brand", "your top competitors", etc). No LLM call needed for these.
+export function ruleCheckOutboundLead(lead: OutboundLead): ContentCheckResult {
+  if (!lead.brand || !lead.brand.trim()) return { ok: false, reason: 'Missing brand/company name' }
+  if (lead.overall_score == null || lead.overall_score < 0 || lead.overall_score > 100) {
+    return { ok: false, reason: `Invalid overall_score: ${lead.overall_score}` }
+  }
+  if (!lead.worst_model) return { ok: false, reason: 'Missing worst_model — audit likely incomplete' }
+  if (!lead.competitor_scores || lead.competitor_scores.length === 0) {
+    return { ok: false, reason: 'No competitors found — email would use generic filler text' }
+  }
+  if (!lead.sample_query || !lead.sample_query.trim()) return { ok: false, reason: 'Missing sample_query' }
+  if (!/\S+@\S+\.\S+/.test(lead.email)) return { ok: false, reason: `Malformed email address: ${lead.email}` }
+  return { ok: true }
+}
+
+// Semantic check — asks Claude to read the fully-rendered email as a human
+// would and flag anything nonsensical, contradictory, or embarrassing before
+// it goes out to a real prospect. Only called after the rule check passes.
+export async function llmCheckOutboundEmail(params: {
+  lead: OutboundLead
+  subject: string
+  body: string
+}): Promise<ContentCheckResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return { ok: false, reason: 'ANTHROPIC_API_KEY not configured — cannot run content safety check' }
+
+  const { lead, subject, body } = params
+  const competitorsStr = (lead.competitor_scores ?? []).map(c => `${c.name} (${c.score})`).join(', ')
+
+  const prompt = `You are a quality-control reviewer for a personalized B2B cold outreach email about AI brand visibility, about to be sent to a real prospect. Flag it if it contains: leftover placeholder-looking text (e.g. "your brand", "your top competitors", "one AI model" where real data should be), factual nonsense (e.g. a brand listed as its own competitor, an impossible score), broken personalization, or any other issue that would look unprofessional or confusing to the recipient.
+
+Context data used to generate this email:
+- Recipient: ${lead.name ?? 'unknown'} (${lead.email})
+- Brand: ${lead.brand ?? lead.company ?? 'unknown'}
+- Overall AI visibility score: ${lead.overall_score}
+- Weakest model: ${lead.worst_model} (${lead.worst_score})
+- Competitors: ${competitorsStr || 'none'}
+
+--- EMAIL SUBJECT ---
+${subject}
+
+--- EMAIL BODY ---
+${body}
+
+Respond with ONLY a JSON object and nothing else: {"ok": true} if this email is ready to send as-is, or {"ok": false, "reason": "<short reason, under 15 words>"} if it should NOT be sent.`
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    })
+    if (!res.ok) return { ok: false, reason: `Content check API error ${res.status} — will retry next cycle` }
+    const data = await res.json()
+    const text = (data.content?.[0]?.text ?? '').trim()
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+    const parsed = JSON.parse(stripped)
+    if (typeof parsed.ok === 'boolean') return parsed
+    return { ok: false, reason: 'Content check returned an unparseable verdict' }
+  } catch (e) {
+    // Fail closed — if we can't verify the email is sane, don't send it.
+    return { ok: false, reason: `Content check failed: ${String(e).slice(0, 100)}` }
+  }
+}
+
 export function buildOutboundHtml(bodyText: string, leadId: string): string {
   const cta = `${APP_URL}/api/track/c/${leadId}?u=${encodeURIComponent(APP_URL + '/?utm_source=outreach&utm_medium=email')}`
   const pixel = `${APP_URL}/api/track/o/${leadId}.png`
