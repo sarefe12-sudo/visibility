@@ -23,13 +23,13 @@ export const DEFAULT_SUBJECT = `{{brand}}: how to get recommended by ChatGPT in 
 
 export const DEFAULT_BODY = `Hi {{first_name}},
 
-When someone asks ChatGPT or Claude "{{query}}", they get a recommendation on the spot — and right now, it often isn't {{brand}}.
+{{opening_line}}
 
 I ran {{brand}} through the AI models your buyers actually use. Here's where you stand:
 
 • Your AI visibility score: {{score}}/100{{competitor_bullet}}
 
-The good news: this is very fixable. Based on your results, three changes would move the needle most over the next 30 days:
+{{transition_line}} Based on your results, three changes would move the needle most over the next 30 days:
 
 1. Publish a structured FAQ that answers the exact questions people ask AI in your space
 2. Add schema markup so AI models can clearly identify who you are and what you offer
@@ -65,6 +65,26 @@ function competitorBullet(lead: OutboundLead): string {
   return `\n• Competitors on the same questions: ${formatCompetitors(stronger)}`
 }
 
+// The pitch has to match the audit result, or the content-safety check will
+// (correctly) block it as self-contradictory. Low scores get the "AI isn't
+// recommending you" urgency angle; strong scores get a "protect and extend
+// your lead" angle instead.
+function openingLine(lead: OutboundLead): string {
+  const brand = lead.brand || lead.company || 'your brand'
+  const query = (lead.sample_query || 'the best option in your space').replace(/\?+\s*$/, '')
+  const score = lead.overall_score ?? 0
+  if (score >= 60) {
+    return `When someone asks ChatGPT or Claude "${query}", ${brand} is already part of the conversation — that's a real asset most brands don't have yet. The question now is keeping it that way as AI answers keep shifting.`
+  }
+  return `When someone asks ChatGPT or Claude "${query}", they get a recommendation on the spot — and right now, it often isn't ${brand}.`
+}
+
+function transitionLine(lead: OutboundLead): string {
+  const score = lead.overall_score ?? 0
+  if (score >= 60) return `Here's how to lock in and extend that lead.`
+  return `The good news: this is very fixable.`
+}
+
 function firstName(name: string | null): string {
   if (!name) return 'there'
   return name.trim().split(/\s+/)[0]
@@ -82,6 +102,8 @@ export function renderOutboundTemplate(template: string, lead: OutboundLead): st
     .replace(/\{\{\s*worst_model\s*\}\}/gi, lead.worst_model || 'one AI model')
     .replace(/\{\{\s*worst_score\s*\}\}/gi, lead.worst_score != null ? String(Math.round(lead.worst_score)) : '—')
     .replace(/\{\{\s*recommendation\s*\}\}/gi, (lead.top_recommendation || 'improving your AI visibility').replace(/\.+\s*$/, ''))
+    .replace(/\{\{\s*opening_line\s*\}\}/gi, openingLine(lead))
+    .replace(/\{\{\s*transition_line\s*\}\}/gi, transitionLine(lead))
     .replace(/\{\{\s*competitor_bullet\s*\}\}/gi, competitorBullet(lead))
     .replace(/\{\{\s*competitors\s*\}\}/gi, formatCompetitors(lead.competitor_scores))
     .replace(/\{\{\s*query\s*\}\}/gi, (lead.sample_query || 'the best option in your space').replace(/\?+\s*$/, ''))
