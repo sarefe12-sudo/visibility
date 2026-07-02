@@ -94,6 +94,36 @@ export async function POST(req: Request) {
     })
   }
 
+  // order.refunded — data: Order { id, totalAmount, refundedAmount, subscriptionId }
+  // A full refund on a subscription's order downgrades the user immediately,
+  // even if the subscription itself hasn't been canceled/revoked separately.
+  if (event.type === 'order.refunded') {
+    const order = event.data
+    const isFullRefund = order.refundedAmount >= order.totalAmount
+
+    await supabase.from('billing_events').insert({
+      user_id: null,
+      event_type: event.type,
+      amount_cents: -order.refundedAmount,
+      lemon_subscription_id: order.subscriptionId,
+    })
+
+    if (isFullRefund && order.subscriptionId) {
+      const { data: downgradedUser } = await supabase.from('users')
+        .update({ tier: 'free', polar_subscription_id: null })
+        .eq('polar_subscription_id', order.subscriptionId)
+        .select('id')
+        .single()
+
+      await supabase.from('audit_logs').insert({
+        actor_email: 'system',
+        action: event.type,
+        target_id: downgradedUser?.id ?? null,
+        details: { subscriptionId: order.subscriptionId, refundedAmount: order.refundedAmount, provider: 'polar' },
+      })
+    }
+  }
+
   // order.paid — data: Order { id, totalAmount, subscriptionId, customer: {...} }
   if (event.type === 'order.paid') {
     const order = event.data

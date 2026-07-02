@@ -66,6 +66,7 @@ export default function Footer() {
                 { href: "/", label: "Free Demo" },
                 { href: "/analyze", label: "Analyze Your Brand" },
                 { href: "/dashboard", label: "Dashboard" },
+                { href: "/pricing", label: "Pricing" },
                 { href: "/blog", label: "Blog" },
                 { href: "/docs", label: "API Docs" },
                 { href: "/faq", label: "FAQ" },
