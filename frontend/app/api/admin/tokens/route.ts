@@ -66,9 +66,17 @@ export async function GET() {
       cost_usd: cost,
     }))
 
+  // Real MRR — same formula as /api/admin/subscriptions, computed from live tier counts
+  // rather than billing_events (which only fills in once webhook events have started arriving).
+  const { data: paidUsers } = await supabase.from('users').select('tier').in('tier', ['pro', 'agency'])
+  const proCount = paidUsers?.filter(u => u.tier === 'pro').length ?? 0
+  const agencyCount = paidUsers?.filter(u => u.tier === 'agency').length ?? 0
+  const mrr = proCount * 49 + agencyCount * 599
+
   return NextResponse.json({
     totalCost,
     modelTotals,
     topUsers,
+    mrr,
   })
 }

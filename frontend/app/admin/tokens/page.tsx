@@ -6,16 +6,12 @@ interface TokenStats {
   totalCost: number
   modelTotals: Record<string, { prompt: number; completion: number; cost: number }>
   topUsers: { id: string; email: string; tier: string; cost_usd: number }[]
+  mrr: number
 }
-
-const PRO_PRICE = 49
-const AGENCY_PRICE = 199
 
 export default function TokensPage() {
   const [data, setData] = useState<TokenStats | null>(null)
   const [loading, setLoading] = useState(true)
-  // rough MRR estimate — will be replaced with real billing data
-  const [mrrEstimate] = useState(0)
 
   useEffect(() => {
     fetch('/api/admin/tokens').then(r => r.json()).then(d => { setData(d); setLoading(false) })
@@ -24,7 +20,7 @@ export default function TokensPage() {
   if (loading) return <div className="p-8 text-slate-400">Loading...</div>
   if (!data) return <div className="p-8 text-red-400">Failed to load</div>
 
-  const margin = mrrEstimate > 0 ? (((mrrEstimate - data.totalCost) / mrrEstimate) * 100).toFixed(1) : '—'
+  const margin = data.mrr > 0 ? (((data.mrr - data.totalCost) / data.mrr) * 100).toFixed(1) : '—'
 
   return (
     <div className="p-8">
@@ -38,8 +34,8 @@ export default function TokensPage() {
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">MRR</div>
-          <div className="text-2xl font-bold text-white">${mrrEstimate.toLocaleString()}</div>
-          <div className="text-xs text-slate-500 mt-1">from billing events</div>
+          <div className="text-2xl font-bold text-white">${data.mrr.toLocaleString()}</div>
+          <div className="text-xs text-slate-500 mt-1">from active Pro/Agency users</div>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Gross Margin</div>

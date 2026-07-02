@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import Link from "next/link";
 
+// Polar.sh product IDs — not secrets, safe to ship in the client bundle.
+// Prefer the env var if set (lets it be overridden per-environment), else fall
+// back to the real production product IDs so checkout works without needing
+// to configure Vercel env vars first.
+const POLAR_PRO_PRODUCT_ID = process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID || 'e98515ea-8c01-42c4-b9ad-39811e34f188';
+const POLAR_AGENCY_PRODUCT_ID = process.env.NEXT_PUBLIC_POLAR_AGENCY_PRODUCT_ID || 'bdf649a9-bf19-426e-a96b-5fa29487b1e2';
+
 const MODEL_PILLS = [
   { name: "Claude",      color: "#d97757" },
   { name: "GPT-4o",     color: "#10a37f" },
@@ -46,7 +53,7 @@ const PLANS = [
     originalPrice: "$99",
     period: "/month",
     variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID,
-    polarProductId: process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID,
+    polarProductId: POLAR_PRO_PRODUCT_ID,
     tier: "pro",
     badge: "Most Popular",
     highlight: true,
@@ -72,7 +79,7 @@ const PLANS = [
     price: "$599",
     period: "/month",
     variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_AGENCY_VARIANT_ID,
-    polarProductId: process.env.NEXT_PUBLIC_POLAR_AGENCY_PRODUCT_ID,
+    polarProductId: POLAR_AGENCY_PRODUCT_ID,
     tier: "agency",
     badge: "For Agencies",
     highlight: false,

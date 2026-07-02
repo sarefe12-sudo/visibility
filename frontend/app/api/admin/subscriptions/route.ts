@@ -35,7 +35,7 @@ export async function GET() {
 
   const pro = paidUsers?.filter(u => u.tier === 'pro').length ?? 0
   const agency = paidUsers?.filter(u => u.tier === 'agency').length ?? 0
-  const mrr = pro * 49 + agency * 199
+  const mrr = pro * 49 + agency * 599
 
   return NextResponse.json({ events: events ?? [], mrr, pro, agency })
 }

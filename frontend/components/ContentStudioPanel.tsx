@@ -240,7 +240,7 @@ export default function ContentStudioPanel({ data, market, tier, analysisId, pla
       {posts && (
         <div className="divide-y divide-slate-100">
           {posts.map((post, i) => (
-            <div key={i} className="overflow-hidden">
+            <div key={i} className={expanded === i ? '' : 'overflow-hidden'}>
               {/* Card header */}
               <div
                 className="flex items-start gap-3 px-5 py-4 cursor-pointer hover:bg-slate-50/70 transition-colors"

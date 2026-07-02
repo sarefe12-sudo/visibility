@@ -22,6 +22,13 @@ export default function SubscriptionsPage() {
   }, [])
 
   const eventLabel: Record<string, string> = {
+    'subscription.created': 'New Subscription',
+    'subscription.updated': 'Subscription Updated',
+    'subscription.active': 'Subscription Active',
+    'subscription.canceled': 'Cancelled',
+    'subscription.revoked': 'Revoked',
+    'order.paid': 'Payment Received',
+    // Legacy LemonSqueezy events — kept so old rows still render a label
     subscription_created: 'New Subscription',
     subscription_updated: 'Subscription Updated',
     subscription_cancelled: 'Cancelled',
@@ -31,6 +38,12 @@ export default function SubscriptionsPage() {
   }
 
   const eventColor: Record<string, string> = {
+    'subscription.created': 'text-emerald-400',
+    'subscription.active': 'text-emerald-400',
+    'order.paid': 'text-emerald-400',
+    'subscription.canceled': 'text-red-400',
+    'subscription.revoked': 'text-red-400',
+    'subscription.updated': 'text-blue-400',
     subscription_created: 'text-emerald-400',
     subscription_payment_success: 'text-emerald-400',
     subscription_cancelled: 'text-red-400',
@@ -63,25 +76,25 @@ export default function SubscriptionsPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Agency Subscribers</div>
           <div className="text-2xl font-bold text-amber-400">{data.agency}</div>
-          <div className="text-xs text-slate-500 mt-1">${data.agency * 199}/mo</div>
+          <div className="text-xs text-slate-500 mt-1">${data.agency * 599}/mo</div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-8">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <div className="text-xs text-slate-500 uppercase tracking-wider mb-3">Products</div>
+          <div className="text-xs text-slate-500 uppercase tracking-wider mb-3">Products (Polar.sh)</div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <div>
                 <div className="text-sm font-medium text-white">Pro Plan · $49/mo</div>
-                <div className="text-xs text-slate-500">Product ID: 1168029</div>
+                <div className="text-xs text-slate-500 font-mono">e98515ea-8c01-42c4-b9ad-39811e34f188</div>
               </div>
               <span className="text-xs bg-indigo-900/40 text-indigo-400 px-2 py-1 rounded-full">Active</span>
             </div>
             <div className="flex justify-between items-center">
               <div>
-                <div className="text-sm font-medium text-white">Agency Plan · $199/mo</div>
-                <div className="text-xs text-slate-500">Product ID: 1168012</div>
+                <div className="text-sm font-medium text-white">Agency Plan · $599/mo</div>
+                <div className="text-xs text-slate-500 font-mono">bdf649a9-bf19-426e-a96b-5fa29487b1e2</div>
               </div>
               <span className="text-xs bg-amber-900/40 text-amber-400 px-2 py-1 rounded-full">Active</span>
             </div>
@@ -89,15 +102,16 @@ export default function SubscriptionsPage() {
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <div className="text-xs text-slate-500 uppercase tracking-wider mb-3">Webhook Events Configured</div>
+          <div className="text-xs text-slate-500 uppercase tracking-wider mb-3">Webhook Events Configured (Polar.sh)</div>
           <div className="space-y-1.5 text-sm">
-            {Object.keys(eventLabel).map(e => (
+            {['subscription.created', 'subscription.updated', 'subscription.active', 'subscription.canceled', 'subscription.revoked', 'order.paid'].map(e => (
               <div key={e} className="flex items-center gap-2">
                 <span className="text-emerald-500">✓</span>
                 <code className={`text-xs ${eventColor[e] ?? 'text-slate-300'}`}>{e}</code>
               </div>
             ))}
           </div>
+          <p className="text-[11px] text-slate-600 mt-3">Endpoint: /api/webhook/polar</p>
         </div>
       </div>
 
