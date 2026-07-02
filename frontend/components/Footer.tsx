@@ -56,6 +56,19 @@ export default function Footer() {
                 X / Twitter
               </a>
             </div>
+            <a
+              href="https://theresanaiforthat.com/ai/visibilityradar/?ref=featured&v=11549770"
+              target="_blank"
+              rel="nofollow"
+              className="inline-block mt-4"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                width={220}
+                src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                alt="Featured on There's An AI For That"
+              />
+            </a>
           </div>
 
           {/* Product */}
