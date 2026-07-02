@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { AnalyzeResponse } from '@/types'
+import PublishButton from './PublishButton'
 
 interface Props {
   data: AnalyzeResponse
@@ -122,6 +123,9 @@ export default function GrowthKitPanel({ data, market, tier, analysisId }: Props
                       className="rounded-lg bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors">
                       {copied === item.type ? 'Copied!' : 'Copy'}
                     </button>
+                    {(item.type === 'faq' || item.type === 'press_release') && (
+                      <PublishButton title={asset.title} markdown={asset.content} />
+                    )}
                     <button onClick={() => generate(item.type)} disabled={isLoading}
                       className="ml-auto text-[11px] text-indigo-500 hover:text-indigo-700 disabled:opacity-50">
                       {isLoading ? 'Regenerating…' : 'Regenerate'}

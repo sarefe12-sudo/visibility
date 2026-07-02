@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import ApiKeyCard from "@/components/ApiKeyCard";
+import PublishingConnections from "@/components/PublishingConnections";
 import type { AppUser, UserType } from "@/lib/supabase";
 
 const CANCEL_REASONS = [
@@ -233,6 +234,11 @@ export default function ProfilePage() {
         {/* MCP API Keys */}
         <div className="mt-6">
           <ApiKeyCard tier={tier} />
+        </div>
+
+        {/* Publishing Integrations */}
+        <div className="mt-6">
+          <PublishingConnections tier={tier} />
         </div>
 
         {/* MCP explainer */}

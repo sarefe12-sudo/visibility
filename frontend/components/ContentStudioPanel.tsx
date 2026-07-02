@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { AnalyzeResponse } from '@/types'
+import PublishButton from './PublishButton'
 
 interface ContentPost {
   title: string
@@ -300,6 +301,7 @@ export default function ContentStudioPanel({ data, market, tier, analysisId, pla
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       Download .md
                     </button>
+                    <PublishButton title={post.title} markdown={post.content} />
                   </div>
                 </div>
               )}
