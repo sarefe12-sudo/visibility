@@ -56,19 +56,33 @@ export default function Footer() {
                 X / Twitter
               </a>
             </div>
-            <a
-              href="https://theresanaiforthat.com/ai/visibilityradar/?ref=featured&v=11549770"
-              target="_blank"
-              rel="nofollow"
-              className="inline-block mt-4"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                width={220}
-                src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
-                alt="Featured on There's An AI For That"
-              />
-            </a>
+            <div className="flex flex-col items-start gap-3 mt-4">
+              <a
+                href="https://theresanaiforthat.com/ai/visibilityradar/?ref=featured&v=11549770"
+                target="_blank"
+                rel="nofollow"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  width={220}
+                  src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                  alt="Featured on There's An AI For That"
+                />
+              </a>
+              <a
+                href="https://startupbase.io/products/visibiliryradar?utm_source=startupbase&utm_medium=badge&utm_campaign=launch-badge-light"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://statics.startupbase.io/site/badges/launched-on-sb.svg"
+                  alt="Launched on StartupBase"
+                  height={55}
+                  style={{ height: 55, width: 'auto' }}
+                />
+              </a>
+            </div>
           </div>
 
           {/* Product */}
