@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { renderOutboundTemplate, DEFAULT_SUBJECT, DEFAULT_BODY, type OutboundLead } from '@/lib/outboundEmail'
+import { renderOutboundTemplate, buildOutboundHtml, DEFAULT_SUBJECT, DEFAULT_BODY, type OutboundLead } from '@/lib/outboundEmail'
 
 interface Lead {
   id: string
@@ -310,8 +310,11 @@ function ViewEmailModal({ lead, onClose }: { lead: Lead; onClose: () => void }) 
           <div className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2">{subject}</div>
         </div>
         <div>
-          <label className="text-xs text-slate-500 mb-1 block">Body</label>
-          <div className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg p-3 whitespace-pre-wrap leading-relaxed">{body}</div>
+          <label className="text-xs text-slate-500 mb-1 block">Body — exactly as the recipient sees it (incl. CTA button &amp; footer)</label>
+          <div
+            className="bg-white border border-slate-700 rounded-lg p-4"
+            dangerouslySetInnerHTML={{ __html: buildOutboundHtml(body, lead.id) }}
+          />
         </div>
         <div className="flex justify-end mt-4">
           <button onClick={onClose} className="text-slate-400 text-sm px-4 py-2 hover:text-white">Close</button>

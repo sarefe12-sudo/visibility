@@ -47,7 +47,7 @@ One pattern that stood out: {{recommendation}}.
 
 Make these changes and your odds of being the brand AI recommends for queries like "{{query}}" go up — and we track that score for you month over month.
 
-Want me to generate your growth kit for {{brand}}?`
+Want me to generate your growth kit for {{brand}}? Start free here: https://visibilityradar.ai/?utm_source=outreach`
 
 function formatCompetitors(comps: CompetitorScore[] | null): string {
   if (!comps || comps.length === 0) return 'your top competitors'
