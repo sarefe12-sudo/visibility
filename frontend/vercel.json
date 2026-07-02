@@ -11,6 +11,14 @@
     {
       "path": "/api/backlink-publisher?cron=1",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/outbound-audit?cron=1",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/outbound-send?cron=1",
+      "schedule": "0 14 * * *"
     }
   ]
 }

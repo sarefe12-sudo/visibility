@@ -1,9 +1,9 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { renderOutboundTemplate, buildOutboundHtml, type OutboundLead } from '@/lib/outboundEmail'
 
 const ADMIN_EMAIL = 'sarefe12@gmail.com'
-const APP_URL = 'https://visibilityradar.ai'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,69 +19,7 @@ async function requireAdmin() {
   return userId
 }
 
-interface CompetitorScore { name: string; score: number }
-
-interface Lead {
-  id: string
-  email: string
-  name: string | null
-  brand: string | null
-  company: string | null
-  overall_score: number | null
-  worst_model: string | null
-  worst_score: number | null
-  top_recommendation: string | null
-  competitor_scores: CompetitorScore[] | null
-  sample_query: string | null
-}
-
-// "Trello — 100/100, Monday.com — 97/100, Jira — 70/100"
-function formatCompetitors(comps: CompetitorScore[] | null): string {
-  if (!comps || comps.length === 0) return 'your top competitors'
-  return comps.map(c => `${c.name} — ${Math.round(c.score)}/100`).join(', ')
-}
-
-function firstName(name: string | null): string {
-  if (!name) return 'there'
-  return name.trim().split(/\s+/)[0]
-}
-
-// Replace {{token}} placeholders
-function render(template: string, lead: Lead): string {
-  const brand = lead.brand || lead.company || 'your brand'
-  return template
-    .replace(/\{\{\s*name\s*\}\}/gi, lead.name || 'there')
-    .replace(/\{\{\s*first_name\s*\}\}/gi, firstName(lead.name))
-    .replace(/\{\{\s*brand\s*\}\}/gi, brand)
-    .replace(/\{\{\s*company\s*\}\}/gi, lead.company || brand)
-    .replace(/\{\{\s*score\s*\}\}/gi, lead.overall_score != null ? String(Math.round(lead.overall_score)) : '—')
-    .replace(/\{\{\s*worst_model\s*\}\}/gi, lead.worst_model || 'one AI model')
-    .replace(/\{\{\s*worst_score\s*\}\}/gi, lead.worst_score != null ? String(Math.round(lead.worst_score)) : '—')
-    .replace(/\{\{\s*recommendation\s*\}\}/gi, (lead.top_recommendation || 'improving your AI visibility').replace(/\.+\s*$/, ''))
-    .replace(/\{\{\s*competitors\s*\}\}/gi, formatCompetitors(lead.competitor_scores))
-    .replace(/\{\{\s*query\s*\}\}/gi, (lead.sample_query || 'the best option in your space').replace(/\?+\s*$/, ''))
-}
-
-function buildHtml(bodyText: string, leadId: string): string {
-  // Convert newlines to <br>, wrap the CTA link with click tracking
-  const cta = `${APP_URL}/api/track/c/${leadId}?u=${encodeURIComponent(APP_URL + '/?utm_source=outreach&utm_medium=email')}`
-  const pixel = `${APP_URL}/api/track/o/${leadId}.png`
-
-  const htmlBody = bodyText
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br>')
-
-  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;color:#1e293b;font-size:15px;line-height:1.6;">
-    <p>${htmlBody}</p>
-    <p style="margin:28px 0;">
-      <a href="${cta}" style="background:#4f46e5;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:600;display:inline-block;">Generate my AI growth kit →</a>
-    </p>
-    <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
-    <p style="color:#94a3b8;font-size:12px;">VisibilityRadar · <a href="${APP_URL}" style="color:#6366f1;">visibilityradar.ai</a><br>
-    See how AI models describe your brand across Claude, GPT-4o, Gemini, Perplexity, Grok &amp; DeepSeek.</p>
-    <img src="${pixel}" width="1" height="1" style="display:none" alt="">
-  </div>`
-}
+type Lead = OutboundLead
 
 // POST /api/admin/outbound/send
 // body: { ids: string[], subject: string, body: string }
@@ -114,9 +52,9 @@ export async function POST(req: Request) {
   const batch = (leads ?? []).slice(0, MAX_PER_RUN)
 
   for (const lead of batch as Lead[]) {
-    const renderedSubject = render(subject, lead)
-    const renderedBody = render(body, lead)
-    const html = buildHtml(renderedBody, lead.id)
+    const renderedSubject = renderOutboundTemplate(subject, lead)
+    const renderedBody = renderOutboundTemplate(body, lead)
+    const html = buildOutboundHtml(renderedBody, lead.id)
 
     const recipient = testTo ?? lead.email
     const finalSubject = testTo ? `[TEST→${lead.email}] ${renderedSubject}` : renderedSubject
