@@ -49,6 +49,7 @@ interface ApolloPerson {
   first_name?: string
   last_name?: string
   title?: string
+  has_email?: boolean
   organization?: { name?: string; primary_domain?: string; website_url?: string; industry?: string }
 }
 
@@ -62,9 +63,7 @@ async function searchApollo(apiKey: string, filters: ApolloFilters): Promise<{ p
     per_page: Math.min(filters.perPage ?? 25, 100),
   }
   if (filters.titles?.length) body.person_titles = filters.titles
-  // The new search endpoint doesn't expose an industry-tag filter — fold
-  // industry terms into the general keyword search instead.
-  if (filters.industries?.length) body.q_keywords = filters.industries.join(' ')
+  if (filters.industries?.length) body.q_organization_keyword_tags = filters.industries
   if (filters.employeeRanges?.length) body.organization_num_employees_ranges = filters.employeeRanges
   if (filters.locations?.length) body.person_locations = filters.locations
 
@@ -128,8 +127,13 @@ export async function fetchFromApollo(filters: ApolloFilters): Promise<{ leads: 
   if (error) return { leads: [], error }
   if (people.length === 0) return { leads: [] }
 
+  // Apollo's search response already flags whether a person has a
+  // revealable email (has_email) — skip enrich calls (and the credit they
+  // cost) for people it's already told us have none.
+  const candidates = people.filter(p => p.has_email !== false)
+
   const leads: LeadInput[] = []
-  for (const person of people) {
+  for (const person of candidates) {
     const lead = await enrichPerson(apiKey, person)
     if (lead) leads.push(lead)
   }
