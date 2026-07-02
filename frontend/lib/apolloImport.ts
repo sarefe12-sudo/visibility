@@ -90,8 +90,11 @@ async function enrichPerson(apiKey: string, person: ApolloPerson): Promise<LeadI
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Api-Key': apiKey },
     body: JSON.stringify({
-      first_name: person.first_name,
-      last_name: person.last_name,
+      // Search results only expose a masked last_name_obfuscated (e.g.
+      // "Sm***h"), not the real last_name — name-based matching against
+      // that fails silently. The Apollo person id from search is an exact,
+      // reliable match on its own.
+      id: person.id,
       organization_name: org.name,
       domain: org.primary_domain ?? org.website_url,
       reveal_personal_emails: true,
