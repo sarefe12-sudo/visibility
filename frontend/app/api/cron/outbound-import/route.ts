@@ -53,12 +53,14 @@ export async function GET(req: Request) {
 
     const leads = normalizeLeads(rawLeads)
     let imported = 0
+    let upsertError: string | undefined
     if (leads.length > 0) {
       const rows = leads.map(l => ({ ...l, source: `apollo_auto_${segment}`, status: 'pending' }))
-      const { data } = await supabase
+      const { data, error: dbError } = await supabase
         .from('outbound_leads')
         .upsert(rows, { onConflict: 'email', ignoreDuplicates: true })
         .select('id')
+      if (dbError) upsertError = dbError.message
       imported = data?.length ?? 0
     }
 
@@ -69,7 +71,7 @@ export async function GET(req: Request) {
       .update({ next_page: page + 1, updated_at: new Date().toISOString() })
       .eq('segment', segment)
 
-    results[segment] = { imported, found: leads.length }
+    results[segment] = { imported, found: leads.length, ...(upsertError ? { error: upsertError } : {}) }
   }
 
   return NextResponse.json({ ok: true, results })

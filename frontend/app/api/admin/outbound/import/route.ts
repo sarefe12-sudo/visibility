@@ -49,12 +49,12 @@ export async function POST(req: Request) {
 
   // Upsert by email (ignore duplicates)
   const rows = leads.map(l => ({ ...l, source: mode, status: 'pending' }))
-  const { data, error } = await supabase
+  const { data, error: dbError } = await supabase
     .from('outbound_leads')
     .upsert(rows, { onConflict: 'email', ignoreDuplicates: true })
     .select('id')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 })
 
   return NextResponse.json({ ok: true, imported: data?.length ?? 0, found: leads.length })
 }
