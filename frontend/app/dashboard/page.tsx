@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import Dashboard from "@/components/Dashboard";
 import ShareModal from "@/components/ShareModal";
@@ -110,11 +110,21 @@ function ScoreBadge({ score }: { score: number }) {
 }
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardPageContent />
+    </Suspense>
+  );
+}
+
+function DashboardPageContent() {
   const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activating, setActivating] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState<{ data: AnalyzeResponse; market: string; previousScore?: number; analysisId?: string; savedPlaybook?: Analysis['playbook'] | null } | null>(null);
   const [showCancel, setShowCancel] = useState(false);
   const [cancelDone, setCancelDone] = useState(false);
@@ -134,9 +144,31 @@ export default function DashboardPage() {
       setAppUser(u);
       setAnalyses(a ?? []);
       setLoading(false);
+
+      // Just came back from checkout — the plan-activation webhook can lag a
+      // few seconds behind the redirect. Poll briefly instead of showing a
+      // stale "Free" plan right after a successful payment.
+      if (searchParams.get("upgraded") === "true" && (u?.tier ?? "free") === "free") {
+        setActivating(true);
+        let tries = 0;
+        const poll = setInterval(async () => {
+          tries++;
+          const r = await fetch("/api/user");
+          const { user: fresh } = await r.json();
+          if (fresh?.tier && fresh.tier !== "free") {
+            setAppUser(fresh);
+            setActivating(false);
+            clearInterval(poll);
+            router.replace("/dashboard");
+          } else if (tries >= 10) { // ~20s
+            setActivating(false);
+            clearInterval(poll);
+          }
+        }, 2000);
+      }
     }
     load();
-  }, [isLoaded, isSignedIn, router]);
+  }, [isLoaded, isSignedIn, router, searchParams]);
 
   const tier = appUser?.tier ?? "free";
   const limits = TIER_LIMITS[tier as keyof typeof TIER_LIMITS];
@@ -197,6 +229,15 @@ export default function DashboardPage() {
       <AppHeader onLogoClick={() => router.push("/")} />
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-24 pb-20">
+
+        {activating && (
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4">
+            <svg className="h-4 w-4 flex-shrink-0 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            <p className="text-sm text-indigo-700">
+              <span className="font-bold">Payment received!</span> Activating your plan — this takes a few seconds.
+            </p>
+          </div>
+        )}
 
         {/* Welcome row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
