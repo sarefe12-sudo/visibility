@@ -1,0 +1,15 @@
+name: Outbound hourly send
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call outbound-hourly endpoint
+        run: |
+          curl -sS -f -X GET "https://visibilityradar.ai/api/cron/outbound-hourly?cron=1" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

@@ -15,10 +15,6 @@
     {
       "path": "/api/cron/outbound-import?cron=1",
       "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/outbound-hourly?cron=1",
-      "schedule": "0 * * * *"
     }
   ]
 }
