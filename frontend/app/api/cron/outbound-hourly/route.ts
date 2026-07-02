@@ -129,10 +129,11 @@ export async function GET(req: Request) {
 
   // Daily volume cap.
   const todayStart = new Date(); todayStart.setUTCHours(0, 0, 0, 0)
+  // Count by send timestamp, not status — opens/clicks move a lead's status
+  // past 'emailed', which would silently exempt it from the daily cap.
   const { count: sentToday } = await supabase
     .from('outbound_leads')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'emailed')
     .gte('email_sent_at', todayStart.toISOString())
 
   if ((sentToday ?? 0) >= DAILY_SEND_LIMIT) {
