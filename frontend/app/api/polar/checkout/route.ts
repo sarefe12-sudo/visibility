@@ -21,7 +21,10 @@ export async function POST(req: Request) {
   const { data: user } = await supabase.from('users').select('*').eq('clerk_id', userId).single()
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://visibilityradar.ai'
+  // Hardcoded on purpose — a misconfigured NEXT_PUBLIC_APP_URL env var (e.g.
+  // left over from local dev as "http://localhost:3000") would silently send
+  // paying customers to an unreachable page after checkout.
+  const appUrl = 'https://visibilityradar.ai'
 
   try {
     const checkout = await polar.checkouts.create({

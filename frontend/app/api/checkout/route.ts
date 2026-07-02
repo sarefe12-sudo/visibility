@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
   const storeId = process.env.LEMONSQUEEZY_STORE_ID!
   const apiKey = process.env.LEMONSQUEEZY_API_KEY!
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://visibilityradar.ai'
+  const appUrl = 'https://visibilityradar.ai' // hardcoded — see /api/polar/checkout for why
 
   const body = JSON.stringify({
     data: {
